@@ -1,0 +1,9 @@
+<linker>
+<assembly fullname="Assembly-CSharp">
+<type fullname="GameInitializer" preserve="all"/>
+<type fullname="Mover" preserve="all"/>
+<type fullname="Path" preserve="all"/>
+<type fullname="Support" preserve="all"/>
+<type fullname="UnitTests" preserve="all"/>
+</assembly>
+</linker>

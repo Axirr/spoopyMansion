@@ -1,0 +1,13 @@
+{
+"companyName": "DefaultCompany",
+"productName": "SpoopyMansion",
+"dataUrl": "playerMovementBuild.data.unityweb",
+"asmCodeUrl": "playerMovementBuild.asm.code.unityweb",
+"asmMemoryUrl": "playerMovementBuild.asm.memory.unityweb",
+"asmFrameworkUrl": "playerMovementBuild.asm.framework.unityweb",
+"TOTAL_MEMORY": 268435456,
+"graphicsAPI": ["WebGL 2.0", "WebGL 1.0"],
+"webglContextAttributes": {"preserveDrawingBuffer": false},
+"splashScreenStyle": "Dark",
+"backgroundColor": "#231F20"
+}
