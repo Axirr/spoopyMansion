@@ -1,1 +1,6 @@
+Build/
 Library/
+Temp/
+UnityPackageManager/
+.DS_Store
+.vs/
