@@ -24,6 +24,7 @@ public class GameInitializer : MonoBehaviour
     // Time variables for input delay
     const float MovementInputDelay = 0.2f;
     float timeSinceLastMove = 0.0f;
+    const int zombiesPerRoom = 1;
 
     // Game score variables
     int roundsBeaten = 0;
@@ -55,8 +56,7 @@ public class GameInitializer : MonoBehaviour
             //ResetMap(wallFloor4x4Map);
 
             // Add a human and zombie character
-            CreateAndPlaceCharacter(CharacterType.Human, ValidRandomIndexFloorPosition());
-            CreateAndPlaceCharacter(CharacterType.Zombie, ValidRandomIndexFloorPosition());
+            CreateGameCharacters(zombiesPerRoom);
         }
 
     }
@@ -67,8 +67,7 @@ public class GameInitializer : MonoBehaviour
         bool mKeyInput = Input.GetKeyDown(KeyCode.M);
         if (mKeyInput) {
             ResetMapToRandom();
-            CreateAndPlaceCharacter(CharacterType.Human,ValidRandomIndexFloorPosition());
-            CreateAndPlaceCharacter(CharacterType.Zombie,ValidRandomIndexFloorPosition());
+            CreateGameCharacters(zombiesPerRoom);
             return;
         }
 
@@ -85,8 +84,7 @@ public class GameInitializer : MonoBehaviour
             roundsBeaten += 1;
             print("The number of rounds beaten is: " + roundsBeaten);
             ResetMapToRandom();
-            CreateAndPlaceCharacter(CharacterType.Human, ValidRandomIndexFloorPosition());
-            CreateAndPlaceCharacter(CharacterType.Zombie, ValidRandomIndexFloorPosition());
+            CreateGameCharacters(zombiesPerRoom);
             return;
         }
         Mover currentMoverScriptForTests = currentCharacter.GetComponent<Mover>();
@@ -105,17 +103,17 @@ public class GameInitializer : MonoBehaviour
         {
             Vector2 humanPosition = MapToIndicesCoordinates(characterTurnOrderList[0].transform.position);
             List<Direction> pathToHuman = ShortestPathToHuman(humanPosition,MapToIndicesCoordinates(currentCharacter.transform.position));
+            if (pathToHuman.Count == 0) {
+                currentMoverScript.ReduceMovesByOne();
+                return;
+            }
             print("Direction to move (right:0,left:1,up:2,down:3): " + (int)pathToHuman[0]);
             if (pathToHuman.Count == 1) {
-                GameObject.Destroy(characterTurnOrderList[0]);
+                Destroy(characterTurnOrderList[0]);
                 characterTurnOrderList = new List<GameObject>();
             } else {
                 int intialRemainingMoves = currentMoverScript.RemainingMoves();
                 TryMove(currentCharacter, pathToHuman[0]);
-                if (intialRemainingMoves == currentMoverScript.RemainingMoves())
-                {
-                    currentMoverScript.ReduceMovesByOne();
-                }
             }
         }
     }
@@ -191,6 +189,15 @@ public class GameInitializer : MonoBehaviour
         }
     }
 
+    public void CreateGameCharacters(int numberOfZombies) {
+        CreateAndPlaceCharacter(CharacterType.Human, ValidRandomIndexFloorPosition());
+        for (int i = 0; i < numberOfZombies; i++)
+        {
+            CreateAndPlaceCharacter(CharacterType.Zombie, ValidRandomIndexFloorPosition());
+        }
+    }
+
+
     // Returns Vector2(-10000,-10000) if no valid location can be found
     // Cannot spawn a character in a door
     private Vector2 ValidRandomIndexFloorPosition()
@@ -198,7 +205,7 @@ public class GameInitializer : MonoBehaviour
         List<Vector2> characterPositionList = GetOccupiedIndexPositionsList();
         List<int> xInts = new List<int>();
         List<int> yInts = new List<int>();
-        for (int i = 0; i < mapHorizontalLength; i++) {
+        for (int i =  0; i < mapHorizontalLength; i++) {
             xInts.Add(i);
         }
         for (int j = 0; j < mapVerticalLength; j++) {
@@ -218,13 +225,18 @@ public class GameInitializer : MonoBehaviour
                     {
                         return testPosition;
                     }
+                    bool canReturn = true;
                     for (int k = 0; k < characterPositionList.Count; k++)
                     {;
-                        if (characterPositionList[k].x != testPosition.x && characterPositionList[k].y != testPosition.y)
+                        if (characterPositionList[k].x == testPosition.x && characterPositionList[k].y == testPosition.y)
                         {
-                            return testPosition;
+                            canReturn = false;
+                            break;
                         }
 
+                    }
+                    if (canReturn) {
+                        return testPosition;
                     }
 
                 }
