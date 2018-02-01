@@ -38,7 +38,7 @@ public class GameInitializer : MonoBehaviour
     {
         myView = Camera.main.GetComponent<View>();
         myView.Initialize();
-
+        //
         // Check if unit test flag active
         if (runUnitTests)
         {
