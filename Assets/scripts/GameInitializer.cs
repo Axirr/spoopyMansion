@@ -10,12 +10,10 @@ public class GameInitializer : MonoBehaviour
     bool runUnitTests = false;
 
     // Information about the current map
-    GameObject[] tilePrefabs;
     Tiles[,] currentMap;
-    float horizontalDrawOffset;
-    float verticalDrawOffset;
-    int mapHorizontalLength;
-    int mapVerticalLength;
+    int currentNumHorizontalTiles;
+    int currentNumVerticalTiles;
+    View myView;
 
     // Information about the active character and turn order
     GameObject currentCharacter;
@@ -38,11 +36,8 @@ public class GameInitializer : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        // Load floor tile prefabs
-        tilePrefabs = new GameObject[] { Resources.Load(@"prefabs\tiles\Door") as GameObject,
-        Resources.Load(@"prefabs\tiles\Floor") as GameObject,
-        Resources.Load(@"prefabs\tiles\Obstacle") as GameObject,
-        Resources.Load(@"prefabs\tiles\Wall") as GameObject};
+        myView = Camera.main.GetComponent<View>();
+        myView.Initialize();
 
         // Check if unit test flag active
         if (runUnitTests)
@@ -53,7 +48,6 @@ public class GameInitializer : MonoBehaviour
         {
             // Create and draw map
             ResetMapToRandom();
-            //ResetMap(wallFloor4x4Map);
 
             // Add a human and zombie character
             CreateGameCharacters(zombiesPerRoom);
@@ -78,7 +72,7 @@ public class GameInitializer : MonoBehaviour
         }
 
         // Check if the current player is located on a door tile and load a new map if they are
-        Vector2 currentPlayerIndexPosition = MapToIndicesCoordinates(currentCharacter.transform.position);
+        Vector2 currentPlayerIndexPosition = myView.GameObjectCurrentIndexPosition(currentCharacter);
         if (currentMap[(int)currentPlayerIndexPosition.x, (int)currentPlayerIndexPosition.y] == Tiles.Door)
         {
             roundsBeaten += 1;
@@ -87,32 +81,30 @@ public class GameInitializer : MonoBehaviour
             CreateGameCharacters(zombiesPerRoom);
             return;
         }
-        Mover currentMoverScriptForTests = currentCharacter.GetComponent<Mover>();
-        if (currentMoverScriptForTests.RemainingMoves() <= 0)
+        Mover currentMoverScript = currentCharacter.GetComponent<Mover>();
+        if (currentMoverScript.RemainingMoves() <= 0)
         {
-            currentMoverScriptForTests.ResetMoves();
+            currentMoverScript.ResetMoves();
             int newIndex = (characterTurnOrderList.IndexOf(currentCharacter) + 1) % characterTurnOrderList.Count;
             currentCharacter = characterTurnOrderList[newIndex];
+            currentMoverScript = currentCharacter.GetComponent<Mover>();
         }
-        Mover currentMoverScript = currentCharacter.GetComponent<Mover>();
         if (currentMoverScript.MoverType() == CharacterType.Human)
         {
             MoveIfInput();
         }
         else
         {
-            Vector2 humanPosition = MapToIndicesCoordinates(characterTurnOrderList[0].transform.position);
-            List<Direction> pathToHuman = ShortestPathToHuman(humanPosition,MapToIndicesCoordinates(currentCharacter.transform.position));
+            Vector2 humanPosition = myView.GameObjectCurrentIndexPosition(characterTurnOrderList[0]);
+            List<Direction> pathToHuman = ShortestPathToHuman(humanPosition,myView.GameObjectCurrentIndexPosition(currentCharacter));
             if (pathToHuman.Count == 0) {
                 currentMoverScript.ReduceMovesByOne();
                 return;
             }
-            print("Direction to move (right:0,left:1,up:2,down:3): " + (int)pathToHuman[0]);
             if (pathToHuman.Count == 1) {
                 Destroy(characterTurnOrderList[0]);
                 characterTurnOrderList = new List<GameObject>();
             } else {
-                int intialRemainingMoves = currentMoverScript.RemainingMoves();
                 TryMove(currentCharacter, pathToHuman[0]);
             }
         }
@@ -128,10 +120,9 @@ public class GameInitializer : MonoBehaviour
     public void SetMap(Tiles[,] myMap)
     {
         currentMap = myMap;
-        mapHorizontalLength = myMap.GetLength(0);
-        mapVerticalLength = myMap.GetLength(1);
-        horizontalDrawOffset = -mapHorizontalLength / 2.0f + 0.5f;
-        verticalDrawOffset = -mapVerticalLength / 2.0f + 0.5f;
+        currentNumHorizontalTiles = myMap.GetLength(0);
+        currentNumVerticalTiles = myMap.GetLength(1);
+        myView.UpdateMap(currentMap);
     }
 
     public void ResetMap(Tiles[,] mansionMap)
@@ -139,7 +130,7 @@ public class GameInitializer : MonoBehaviour
         Support.DestroyWithTag(Support.MAP_TAG);
         Support.DestroyWithTag(Support.MOVER_TAG);
         SetMap(mansionMap);
-        DrawMap(mansionMap);
+        myView.DrawMap(mansionMap);
         characterTurnOrderList = new List<GameObject>();
     }
 
@@ -170,7 +161,7 @@ public class GameInitializer : MonoBehaviour
         }
 
         newCharacter = Instantiate<GameObject>(Resources.Load(resourceLoadString) as GameObject);
-        newCharacter.transform.position = IndicesToMapCoordinates(indexLocation);
+        myView.MoveGameObjectToIndex(newCharacter, indexLocation);
         Mover newCharacterMoverScript = newCharacter.GetComponent<Mover>();
         switch (newCharacterType) {
             case CharacterType.Human:
@@ -205,18 +196,18 @@ public class GameInitializer : MonoBehaviour
         List<Vector2> characterPositionList = GetOccupiedIndexPositionsList();
         List<int> xInts = new List<int>();
         List<int> yInts = new List<int>();
-        for (int i =  0; i < mapHorizontalLength; i++) {
+        for (int i =  0; i < currentNumHorizontalTiles; i++) {
             xInts.Add(i);
         }
-        for (int j = 0; j < mapVerticalLength; j++) {
+        for (int j = 0; j < currentNumVerticalTiles; j++) {
             yInts.Add(j);
         }
         Support.shuffleListOfInt(xInts);
         Support.shuffleListOfInt(yInts);
 
-        for (int i = 0; i < mapHorizontalLength; i++)
+        for (int i = 0; i < currentNumHorizontalTiles; i++)
         {
-            for (int j = 0; j < mapVerticalLength; j++)
+            for (int j = 0; j < currentNumVerticalTiles; j++)
             {
                 if (!Support.PROHIBITED_TILES_NONHUMAN.Contains(currentMap[xInts[i], yInts[j]]))
                 {
@@ -248,61 +239,30 @@ public class GameInitializer : MonoBehaviour
     #endregion
 
 
-    #region Map drawing/coordinate Functions
-
-    /// <summary>
-    /// Draws the map. Starts drawing from the upper left corner of the grid
-    /// </summary>
-    /// <param name="myMap">My map.</param>
-    public void DrawMap(Tiles[,] myMap)
-    {
-
-        for (int i = 0; i < mapHorizontalLength; i++)
-        {
-            for (int j = 0; j < mapVerticalLength; j++)
-            {
-                Vector3 worldLocation = new Vector3(horizontalDrawOffset + i, verticalDrawOffset + j, -Camera.main.transform.position.z);
-                Instantiate<GameObject>(tilePrefabs[(int)myMap[i, j]], worldLocation, Quaternion.identity);
-            }
-        }
-    }
-
-    public Vector2 IndicesToMapCoordinates(Vector2 oldCoordinate)
-    {
-        return new Vector2(horizontalDrawOffset + oldCoordinate.x, verticalDrawOffset + oldCoordinate.y);
-    }
-
-    public Vector2 MapToIndicesCoordinates(Vector2 oldCoordinate)
-    {
-        return new Vector2(oldCoordinate.x - horizontalDrawOffset, oldCoordinate.y - verticalDrawOffset);
-    }
-
-    #endregion
-
-
     #region Movement functions
 
     public void TryMove(GameObject mover, Direction direction)
     {
-        Vector2 newIndices = MapToIndicesCoordinates(mover.transform.position);
+        Vector2 newIndices = myView.GameObjectCurrentIndexPosition(mover);
         newIndices += VectorForDirection(direction);
 
-        if (IndexPositionWithinMap(newIndices))
+        if (IsIndexPositionWithinMap(newIndices))
         {
             if (IsIndexSpaceWalkable(newIndices))
             {
-                mover.transform.position = IndicesToMapCoordinates(newIndices);
+                myView.MoveGameObjectToIndex(mover,newIndices);
+                //mover.transform.position = myView.IndicesToMapCoordinates(newIndices);
                 timeSinceLastMove = 0.0f;
                 mover.GetComponent<Mover>().ReduceMovesByOne();
             }
         }
     }
 
-    public bool IndexPositionWithinMap(Vector2 position) {
+    public bool IsIndexPositionWithinMap(Vector2 position) {
         if (position.x >= 0 &&
-            position.x < mapHorizontalLength &&
+            position.x < currentNumHorizontalTiles &&
             position.y >= 0 &&
-            position.y < mapVerticalLength) {
+            position.y < currentNumVerticalTiles) {
             return true;
         }
         return false;
@@ -359,8 +319,8 @@ public class GameInitializer : MonoBehaviour
         List<Vector2> returnList = new List<Vector2>();
         foreach (GameObject tempGameObject in this.characterTurnOrderList)
         {
-            Vector3 temp3DPosition = tempGameObject.transform.position;
-            returnList.Add(MapToIndicesCoordinates(new Vector2(temp3DPosition.x, temp3DPosition.y)));
+            Vector2 temp3DPosition = myView.GameObjectCurrentIndexPosition(tempGameObject);
+            returnList.Add(temp3DPosition);
         }
         return returnList;
     }
@@ -376,6 +336,7 @@ public class GameInitializer : MonoBehaviour
             if (horizontalInput > 0)
             {
                 TryMove(currentCharacter, Direction.Right);
+
             }
             else if (horizontalInput < 0)
             {
@@ -413,7 +374,7 @@ public class GameInitializer : MonoBehaviour
                     testPath.AddDirections(testDirection);
                     return testPath.Directions();
                 }
-                if (IndexPositionWithinMap(newLocation) && !exploredPositions.Contains(newLocation) && IsIndexSpaceWalkable(newLocation)) {
+                if (IsIndexPositionWithinMap(newLocation) && !exploredPositions.Contains(newLocation) && IsIndexSpaceWalkable(newLocation)) {
                     exploredPositions.Add(newLocation);
                     Path novelPath = ScriptableObject.CreateInstance<Path>();
                     novelPath.DefaultInit(newLocation);
