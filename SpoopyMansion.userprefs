@@ -1,12 +1,13 @@
 ﻿<Properties StartupConfiguration="{B5359262-1222-69D9-0094-80EE155FD32D}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/scripts/View.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/scripts/Human.cs">
     <Files>
-      <File FileName="Assets/scripts/GameInitializer.cs" Line="15" Column="1" />
-      <File FileName="Assets/scripts/Support.cs" Line="33" Column="49" />
-      <File FileName="Assets/scripts/UnitTests.cs" Line="97" Column="24" />
-      <File FileName="Assets/scripts/Mover.cs" Line="14" Column="31" />
+      <File FileName="Assets/scripts/Game.cs" Line="154" Column="30" />
+      <File FileName="Assets/scripts/Support.cs" Line="158" Column="22" />
+      <File FileName="Assets/scripts/UnitTests.cs" Line="45" Column="9" />
+      <File FileName="Assets/scripts/Mover.cs" Line="11" Column="25" />
       <File FileName="Assets/scripts/Path.cs" Line="18" Column="6" />
-      <File FileName="Assets/scripts/View.cs" Line="11" Column="2" />
+      <File FileName="Assets/scripts/View.cs" Line="30" Column="6" />
+      <File FileName="Assets/scripts/Human.cs" Line="9" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

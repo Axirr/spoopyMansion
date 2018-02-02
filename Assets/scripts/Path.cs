@@ -4,8 +4,14 @@ using UnityEngine;
 
 public class Path : ScriptableObject {
 
+    #region Fields
+
     List<Direction> directions = new List<Direction>();
     Vector2 latestPosition;
+
+    #endregion
+
+
 
     #region Properties
 
@@ -18,6 +24,8 @@ public class Path : ScriptableObject {
     }
 
     #endregion
+
+
 
     #region Methods
 
@@ -43,14 +51,4 @@ public class Path : ScriptableObject {
     }
 
     #endregion
-
-    // Use this for initialization
-    void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 }

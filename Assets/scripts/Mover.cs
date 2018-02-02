@@ -8,10 +8,10 @@ public class Mover : MonoBehaviour {
 
     // Character type currently set by using prefabs with their character type set
     [SerializeField]
-    CharacterType characterType = CharacterType.Zombie;
+    protected MoverType moverType;
 
-    int totalMovesPerTurn;
-    int remainingMovesPerTurn;
+    protected int totalMovesPerTurn;
+    protected int remainingMovesPerTurn;
     
 
     #endregion
@@ -24,8 +24,8 @@ public class Mover : MonoBehaviour {
         return remainingMovesPerTurn;
     }
 
-    public CharacterType MoverType() {
-        return characterType;
+    public MoverType TypeOfMover() {
+        return moverType;
     }
 
     #endregion
@@ -34,17 +34,20 @@ public class Mover : MonoBehaviour {
 
     #region Methods
 
-    private void Init(int totalMovesPerTurn) {
-        this.totalMovesPerTurn = totalMovesPerTurn;
+    public void Init(int movesPerTurn) {
+        this.totalMovesPerTurn = movesPerTurn;
         this.remainingMovesPerTurn = totalMovesPerTurn;
     }
 
-    public void InitHuman() {
+    public void InitHuman()
+    {
         this.Init(2);
+        this.moverType = MoverType.Human;
     }
 
     public void InitZombie() {
         this.Init(1);
+        this.moverType = MoverType.Zombie;
     }
 
     public void ResetMoves() {
@@ -55,9 +58,28 @@ public class Mover : MonoBehaviour {
         remainingMovesPerTurn -= 1;
     }
 
-    #endregion
-	
+    public void SetMovesToZero() {
+        remainingMovesPerTurn = 0;
+    }
 
+    #endregion
+
+
+
+    #region Movement methods
+
+    // Returns true if move was successful, false if move was not succesful
+    public void TryMoveForInput(Direction direction) {
+        
+    }
+
+    public void MoveTo(Vector2 indexPosition) {
+        View myView = Camera.main.GetComponent<View>();
+        myView.MoveGameObjectToIndex(gameObject,indexPosition);
+        this.ReduceMovesByOne();
+    }
+
+    #endregion
 
 
     void Start()

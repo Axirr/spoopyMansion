@@ -117,6 +117,27 @@ public class Support : MonoBehaviour
             myList[n] = tempValue;
         }
     }
+
+    public static Vector2 IndexVectorForDirection(Direction direction)
+    {
+        Vector2 returnVector = new Vector2();
+        switch ((int)direction)
+        {
+            case 0:
+                returnVector = new Vector2(1, 0);
+                break;
+            case 1:
+                returnVector = new Vector2(-1, 0);
+                break;
+            case 2:
+                returnVector = new Vector2(0, 1);
+                break;
+            case 3:
+                returnVector = new Vector2(0, -1);
+                break;
+        }
+        return returnVector;
+    }
 }
 
 public enum Tiles
@@ -134,7 +155,7 @@ public enum Direction {
     Down
 }
 
-public enum CharacterType {
+public enum MoverType {
     Human,
     Zombie
 }
