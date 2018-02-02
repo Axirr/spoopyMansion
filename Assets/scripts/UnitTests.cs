@@ -91,19 +91,19 @@ public class UnitTests : MonoBehaviour {
                           "not on wall (black) or obstacle (red) tiles.");
                     print("Map for moving #1");
                     testGame.ResetMap(wallFloor4x4Map);
-                    testGame.CreateAndPlaceCharacter(MoverType.Human,new Vector2(1,1));
+                    testGame.CreateCharacter(MoverType.Human,new Vector2(1,1));
                     testNumber += 1;
                     break;
                 case 4:
                     print("Map for moving #2");
                     testGame.ResetMap(allTileTypes5x5Map);
-                    testGame.CreateAndPlaceCharacter(MoverType.Human, new Vector2(1, 1));
+                    testGame.CreateCharacter(MoverType.Human, new Vector2(1, 1));
                     testNumber += 1;
                     break;
                 case 5:
                     print("Map for moving #3");
                     testGame.ResetMap(allTileTypes10x9Map);
-                    testGame.CreateAndPlaceCharacter(MoverType.Human, new Vector2(1, 1));
+                    testGame.CreateCharacter(MoverType.Human, new Vector2(1, 1));
                     testNumber += 1;
                     break;
                 //NEED TO CREATE TEST FOR PATHING FUNCTION

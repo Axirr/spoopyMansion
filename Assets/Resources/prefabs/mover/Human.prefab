@@ -20,7 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4514170643957606}
   - component: {fileID: 212003688776023122}
-  - component: {fileID: 114079357985798432}
+  - component: {fileID: 114987850101950638}
   m_Layer: 0
   m_Name: Human
   m_TagString: mover
@@ -41,7 +41,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &114079357985798432
+--- !u!114 &114987850101950638
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -49,10 +49,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1270011084757648}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e876202822e0d4ff88a7addcdfe6fa96, type: 3}
+  m_Script: {fileID: 11500000, guid: 6293a8bc9cd8245129d92d0e7830fdb6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterType: 0
+  moverType: 0
 --- !u!212 &212003688776023122
 SpriteRenderer:
   m_ObjectHideFlags: 1
