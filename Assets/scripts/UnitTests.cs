@@ -6,6 +6,7 @@ public class UnitTests : MonoBehaviour {
     
     Game testGame;
     int testNumber = 0;
+    View myView;
 
     // Wall and floor only, 4 x 4
     Tiles[,] wallFloor4x4Map = new Tiles[,] {
@@ -45,6 +46,7 @@ public class UnitTests : MonoBehaviour {
 
         // 
         testGame = Camera.main.GetComponent<Game>();
+        myView = Camera.main.GetComponent<View>();
         print("Click mouse button 0 to move through tests.");
 	}
 
@@ -57,18 +59,6 @@ public class UnitTests : MonoBehaviour {
             switch (testNumber)
             {
                 case 0:
-                    //List<int> testList = new List<int>() { 0, 0, 0, 0 };
-                    //for (int i = 0; i < 20000; i++) {
-                    //    List<int> rangeList = new List<int>() { 0, 1, 2, 3 };
-                    //    testGame.shuffleListOfInt(rangeList);
-                    //    for (int j = 0; j < 4; j++) {
-                    //        testList[j] += rangeList[j];
-                    //    }
-                    //}
-                    //print("TestList 0th value: " + testList[0]);
-                    //print("TestList 1st value: " + testList[1]);
-                    //print("TestList 2nd value: " + testList[2]);
-                    //print("TestList 3rd value: " + testList[3]);
                     print("Should display a centered 4 x 4 map with only floor and walls.");
                     testGame.ResetMap(wallFloor4x4Map);
                     testNumber += 1;
@@ -90,20 +80,17 @@ public class UnitTests : MonoBehaviour {
                     print("Should be able to move around on all floor (brown) and door (green) tiles and" +
                           "not on wall (black) or obstacle (red) tiles.");
                     print("Map for moving #1");
-                    testGame.ResetMap(wallFloor4x4Map);
-                    testGame.CreateCharacter(MoverType.Human,new Vector2(1,1));
+
                     testNumber += 1;
                     break;
                 case 4:
                     print("Map for moving #2");
-                    testGame.ResetMap(allTileTypes5x5Map);
-                    testGame.CreateCharacter(MoverType.Human, new Vector2(1, 1));
+
                     testNumber += 1;
                     break;
                 case 5:
                     print("Map for moving #3");
-                    testGame.ResetMap(allTileTypes10x9Map);
-                    testGame.CreateCharacter(MoverType.Human, new Vector2(1, 1));
+
                     testNumber += 1;
                     break;
                 //NEED TO CREATE TEST FOR PATHING FUNCTION

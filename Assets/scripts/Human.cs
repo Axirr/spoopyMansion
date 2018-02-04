@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class Human : Mover {
 
-    const int HUMANMOVESPERTURN = 2;
+    const int HUMANMOVESPERTURN = 4;
 
     public void InitHuman() {
-        totalMovesPerTurn = HUMANMOVESPERTURN;
-        remainingMovesPerTurn = totalMovesPerTurn;
+        Init(HUMANMOVESPERTURN);
     }
 }

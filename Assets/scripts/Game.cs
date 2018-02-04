@@ -7,7 +7,7 @@ public class Game : MonoBehaviour
     #region Global Class Variables
 
     // Program mode flags
-    bool runUnitTests = true;
+    bool runUnitTests = false;
 
     // Information about the current map
     Tiles[,] currentMap;
@@ -109,7 +109,7 @@ public class Game : MonoBehaviour
     #region Setup functions
 
     // Sets globals corresponding to map properties when a new map is selected
-    public void SetMap(Tiles[,] myMap)
+    private void SetMap(Tiles[,] myMap)
     {
         currentMap = myMap;
         mapHorizontalWidth = myMap.GetLength(0);
@@ -126,13 +126,13 @@ public class Game : MonoBehaviour
         characterTurnOrderList = new List<GameObject>();
     }
 
-    public void ResetMapToRandom()
+    private void ResetMapToRandom()
     {
         Tiles[,] myMap = Support.GenerateRandomMap();
         ResetMap(myMap);
     }
 
-    public void CreateCharacter(MoverType newMoverType, Vector2 location) {
+    private void CreateCharacter(MoverType newMoverType, Vector2 location) {
         string resourceLoadString;
         switch (newMoverType)
         {
@@ -225,10 +225,18 @@ public class Game : MonoBehaviour
         timeSinceLastInputMove += Time.deltaTime;
         float horizontalInput = Input.GetAxisRaw("Horizontal");
         float verticalInput = Input.GetAxisRaw("Vertical");
+        float rotationInput = Input.GetAxisRaw("Rotation");
+        bool skipInput = Input.GetKeyDown(KeyCode.P);
+        Direction currentMoverDirection = currentCharacter.GetComponent<Mover>().Orientation();
         if (timeSinceLastInputMove > MovementInputDelay)
         {
+            bool didMove = false;
             Mover mover = currentCharacter.GetComponent<Mover>();
-            if (horizontalInput > 0)
+            if (skipInput) {
+                mover.SetMovesToZero();
+                didMove = true;
+            }
+            else if (horizontalInput > 0)
             {
                 TryMoveForMoverInDirection(mover, Direction.Right);
             }
@@ -243,7 +251,15 @@ public class Game : MonoBehaviour
             else if (verticalInput < 0)
             {
                 TryMoveForMoverInDirection(mover, Direction.Down);
+            } else if (rotationInput < 0) {
+                mover.Rotate(Direction.Left);
+                didMove = true;
+            } else if (rotationInput > 0) {
+                mover.Rotate(Direction.Right);
+                didMove = true;
             }
+
+            if (didMove) { timeSinceLastInputMove = 0.0f; }
         }
     }
 
@@ -265,22 +281,35 @@ public class Game : MonoBehaviour
         }
         else
         {
-            Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(pathToHuman[0]);
-            mover.MoveTo(newLocation);
+            Direction directionToMove = pathToHuman[0];
+            if (directionToMove != mover.Orientation()) {
+                int rightTurns = Support.NumberOfRightTurns(mover.Orientation(), directionToMove);
+                if (rightTurns != 3) {
+                    mover.Rotate(Direction.Right);
+                } else {
+                    mover.Rotate(Direction.Left);
+                }
+            } else if (mover.RemainingMoves() < Support.MOVES_PER_STEP) {
+                mover.SetMovesToZero();
+            } else {
+                Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(directionToMove);
+                mover.MoveTo(newLocation);   
+            }
         }
     }
 
-    public void TryMoveForMoverInDirection(Mover mover, Direction direction)
+    private void TryMoveForMoverInDirection(Mover mover, Direction direction)
     {
         Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(direction);
-        if (IsIndexSpaceWalkable(newLocation))
+        Direction currentMoverOrientation = mover.Orientation();
+        if (IsIndexSpaceWalkable(newLocation) && currentMoverOrientation == direction && mover.RemainingMoves() >= Support.MOVES_PER_STEP)
         {
             mover.MoveTo(newLocation);
             timeSinceLastInputMove = 0.0f;
         }
     }
 
-    public bool IsIndexPositionWithinMap(Vector2 position) {
+    private bool IsIndexPositionWithinMap(Vector2 position) {
         if (position.x >= 0 &&
             position.x < mapHorizontalWidth &&
             position.y >= 0 &&
@@ -292,7 +321,7 @@ public class Game : MonoBehaviour
 
     // Checks if the provided location (in index coordinates) is a prohibited tile or is occupied by
     // another character
-    public bool IsIndexSpaceWalkable(Vector2 testSpace)
+    private bool IsIndexSpaceWalkable(Vector2 testSpace)
     {
         List<Tiles> prohibitedListForType;
         if (!(currentCharacter.GetComponent<Mover>() is Human))
@@ -316,7 +345,7 @@ public class Game : MonoBehaviour
     }
 
     // Returns a list of Vector2 positions occupied by characters, in index format
-    public List<Vector2> GetOccupiedIndexPositionsList()
+    private List<Vector2> GetOccupiedIndexPositionsList()
     {
         List<Vector2> returnList = new List<Vector2>();
         foreach (GameObject tempGameObject in this.characterTurnOrderList)
@@ -340,7 +369,7 @@ public class Game : MonoBehaviour
             for (int i = 0; i < 4; i++) {
                 directionIntsToTry.Add(i);
             }
-            Support.shuffleListOfInt(directionIntsToTry);
+            //Support.shuffleListOfInt(directionIntsToTry);
             for (int i = 0; i < 4; i++) {
                 Direction testDirection = (Direction)directionIntsToTry[i];
                 Vector2 newLocation = originalLocation + Support.IndexVectorForDirection(testDirection);

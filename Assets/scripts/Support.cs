@@ -10,6 +10,8 @@ public class Support : MonoBehaviour
     // Constants, for use by the entire program
     public const string MAP_TAG = "map";
     public const string MOVER_TAG = "mover";
+    public const int MOVES_PER_STEP = 2;
+    public const int MOVES_PER_Rotation = 1;
     public static List<Tiles> PROHIBITED_TILES_HUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall };
     public static List<Tiles> PROHIBITED_TILES_NONHUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall, Tiles.Door };
 
@@ -121,22 +123,98 @@ public class Support : MonoBehaviour
     public static Vector2 IndexVectorForDirection(Direction direction)
     {
         Vector2 returnVector = new Vector2();
-        switch ((int)direction)
+        switch (direction)
         {
-            case 0:
+            case Direction.Right:
                 returnVector = new Vector2(1, 0);
                 break;
-            case 1:
+            case Direction.Left:
                 returnVector = new Vector2(-1, 0);
                 break;
-            case 2:
+            case Direction.Up:
                 returnVector = new Vector2(0, 1);
                 break;
-            case 3:
+            case Direction.Down:
                 returnVector = new Vector2(0, -1);
                 break;
         }
         return returnVector;
+    }
+
+    public static int NumberOfRightTurns(Direction currentDirection, Direction newDirection) {
+        int numberOfRightTurns = -1;
+        switch (currentDirection)
+        {
+            case Direction.Up:
+                switch (newDirection)
+                {
+                    case Direction.Up:
+                        numberOfRightTurns = 0;
+                        break;
+                    case Direction.Right:
+                        numberOfRightTurns = 1;
+                        break;
+                    case Direction.Down:
+                        numberOfRightTurns = 2;
+                        break;
+                    case Direction.Left:
+                        numberOfRightTurns = 3;
+                        break;
+                }
+                break;
+            case Direction.Right:
+                switch (newDirection)
+                {
+                    case Direction.Up:
+                        numberOfRightTurns = 3;
+                        break;
+                    case Direction.Right:
+                        numberOfRightTurns = 0;
+                        break;
+                    case Direction.Down:
+                        numberOfRightTurns = 1;
+                        break;
+                    case Direction.Left:
+                        numberOfRightTurns = 2;
+                        break;
+                }
+                break;
+            case Direction.Down:
+                switch (newDirection)
+                {
+                    case Direction.Up:
+                        numberOfRightTurns = 2;
+                        break;
+                    case Direction.Right:
+                        numberOfRightTurns = 3;
+                        break;
+                    case Direction.Down:
+                        numberOfRightTurns = 0;
+                        break;
+                    case Direction.Left:
+                        numberOfRightTurns = 1;
+                        break;
+                }
+                break;
+            case Direction.Left:
+                switch (newDirection)
+                {
+                    case Direction.Up:
+                        numberOfRightTurns = 1;
+                        break;
+                    case Direction.Right:
+                        numberOfRightTurns = 2;
+                        break;
+                    case Direction.Down:
+                        numberOfRightTurns = 3;
+                        break;
+                    case Direction.Left:
+                        numberOfRightTurns = 0;
+                        break;
+                }
+                break;
+        }
+        return numberOfRightTurns;
     }
 }
 
@@ -149,10 +227,10 @@ public enum Tiles
 }
 
 public enum Direction {
-    Right,
-    Left,
-    Up,
-    Down
+    Up = 0,
+    Right = 1,
+    Down = 2,
+    Left = 3,
 }
 
 public enum MoverType {

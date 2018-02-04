@@ -33,6 +33,29 @@ public class View : MonoBehaviour {
         return this.MapToIndicesCoordinates(myGameObject.transform.position);
     }
 
+    public void RotateGameObjectLeftRight(GameObject myGameObject, Direction direction) {
+        switch (direction) {
+            case (Direction.Left):
+                myGameObject.transform.eulerAngles = new Vector3(0, 0, 90);
+                break;
+            case (Direction.Right):
+                myGameObject.transform.eulerAngles = new Vector3(0, 0, -90);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void RotateToDirection(GameObject myGameObject, Direction newDirection) {
+        Mover myMover = myGameObject.GetComponent<Mover>();
+        Direction currentDirection = myMover.Orientation();
+        int numberOfRightTurns = Support.NumberOfRightTurns(currentDirection,newDirection);
+        int numberOfLeftTurns = 4 - numberOfRightTurns;
+        print("Number of right turns is: " + numberOfRightTurns);
+        int newZ = (int)((myGameObject.transform.eulerAngles.z + numberOfLeftTurns * 90) % 360);
+        myGameObject.transform.eulerAngles = new Vector3(0, 0, newZ);
+    }
+
     #endregion
 
 
