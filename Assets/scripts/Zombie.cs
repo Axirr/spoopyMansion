@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Zombie : Mover {
 
-    const int ZOMBIEMOVESPERTURN = 3;
+    const int ZOMBIEMOVESPERTURN = 4;
 
     public void InitZombie()
     {

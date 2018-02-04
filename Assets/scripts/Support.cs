@@ -10,6 +10,7 @@ public class Support : MonoBehaviour
     // Constants, for use by the entire program
     public const string MAP_TAG = "map";
     public const string MOVER_TAG = "mover";
+    public const string HUD_TAG = "hud";
     public const int MOVES_PER_STEP = 2;
     public const int MOVES_PER_Rotation = 1;
     public static List<Tiles> PROHIBITED_TILES_HUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall };

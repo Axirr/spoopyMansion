@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Human : Mover {
 
-    const int HUMANMOVESPERTURN = 4;
+    const int HUMANMOVESPERTURN = 5;
 
     public void InitHuman() {
         Init(HUMANMOVESPERTURN);

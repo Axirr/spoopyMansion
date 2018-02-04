@@ -14,6 +14,7 @@ public class Game : MonoBehaviour
     int mapHorizontalWidth;
     int mapVeticalWidth;
     View myView;
+    HUD hud;
 
     // Information about the active character and turn order
     GameObject currentCharacter;
@@ -21,6 +22,7 @@ public class Game : MonoBehaviour
 
     // Time variables for input delay
     const float MovementInputDelay = 0.2f;
+    const float ZombieMovementInputDelay = 0.5f;
     float timeSinceLastInputMove = 0.0f;
     const int zombiesPerRoom = 1;
 
@@ -37,6 +39,7 @@ public class Game : MonoBehaviour
     void Start()
     {
         myView = Camera.main.GetComponent<View>();
+        hud = GameObject.FindWithTag(Support.HUD_TAG).GetComponent<HUD>();
         myView.Initialize();
         //
         // Check if unit test flag active
@@ -89,6 +92,8 @@ public class Game : MonoBehaviour
             int newIndex = (characterTurnOrderList.IndexOf(currentCharacter) + 1) % characterTurnOrderList.Count;
             currentCharacter = characterTurnOrderList[newIndex];
             currentMover = currentCharacter.GetComponent<Mover>();
+            int maxHumanMoves = characterTurnOrderList[0].GetComponent<Mover>().RemainingMoves();
+            hud.SetCurrentActionPoints(maxHumanMoves);
         }
         if (currentMover is Human)
         {
@@ -164,6 +169,7 @@ public class Game : MonoBehaviour
         for (int i = 0; i < numberOfZombies; i++) {
             CreateCharacter(MoverType.Zombie,ValidRandomIndexFloorPosition());
         }
+        hud.SetCurrentActionPoints(currentCharacter.GetComponent<Mover>().RemainingMoves());
     }
 
 
@@ -238,19 +244,19 @@ public class Game : MonoBehaviour
             }
             else if (horizontalInput > 0)
             {
-                TryMoveForMoverInDirection(mover, Direction.Right);
+                didMove = TryMoveForMoverInDirection(mover, Direction.Right);
             }
             else if (horizontalInput < 0)
             {
-                TryMoveForMoverInDirection(mover, Direction.Left);
+                didMove = TryMoveForMoverInDirection(mover, Direction.Left);
             }
             else if (verticalInput > 0)
             {
-                TryMoveForMoverInDirection(mover, Direction.Up);
+                didMove = TryMoveForMoverInDirection(mover, Direction.Up);
             }
             else if (verticalInput < 0)
             {
-                TryMoveForMoverInDirection(mover, Direction.Down);
+                didMove = TryMoveForMoverInDirection(mover, Direction.Down);
             } else if (rotationInput < 0) {
                 mover.Rotate(Direction.Left);
                 didMove = true;
@@ -259,12 +265,21 @@ public class Game : MonoBehaviour
                 didMove = true;
             }
 
-            if (didMove) { timeSinceLastInputMove = 0.0f; }
+            if (didMove) { 
+                timeSinceLastInputMove = 0.0f;
+                hud.SetCurrentActionPoints(mover.RemainingMoves());
+            }
         }
     }
 
     private void MoveToHuman(Mover mover)
     {
+        timeSinceLastInputMove += Time.deltaTime;
+        if (timeSinceLastInputMove < ZombieMovementInputDelay) {
+            return;
+        } else {
+            timeSinceLastInputMove = 0.0f;
+        }
         Vector2 humanPosition = myView.GameObjectCurrentIndexPosition(characterTurnOrderList[0]);
         List<Direction> pathToHuman = ShortestPathToHuman(humanPosition, myView.GameObjectCurrentIndexPosition(currentCharacter));
         // No path to human
@@ -274,7 +289,7 @@ public class Game : MonoBehaviour
             return;
         }
         // Next to human, attack behaviour
-        if (pathToHuman.Count == 1)
+        if (pathToHuman.Count == 1 && pathToHuman[0] == mover.Orientation())
         {
             Destroy(characterTurnOrderList[0]);
             characterTurnOrderList = new List<GameObject>();
@@ -298,15 +313,16 @@ public class Game : MonoBehaviour
         }
     }
 
-    private void TryMoveForMoverInDirection(Mover mover, Direction direction)
+    private bool TryMoveForMoverInDirection(Mover mover, Direction direction)
     {
         Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(direction);
         Direction currentMoverOrientation = mover.Orientation();
         if (IsIndexSpaceWalkable(newLocation) && currentMoverOrientation == direction && mover.RemainingMoves() >= Support.MOVES_PER_STEP)
         {
             mover.MoveTo(newLocation);
-            timeSinceLastInputMove = 0.0f;
+            return true;
         }
+        return false;
     }
 
     private bool IsIndexPositionWithinMap(Vector2 position) {
