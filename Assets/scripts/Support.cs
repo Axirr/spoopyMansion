@@ -34,8 +34,8 @@ public class Support : MonoBehaviour
     }
 
     public static Tiles[,] GenerateRandomMap() {
-        int randomXSize = Random.Range(5, 11);
-        int randomYSize = Random.Range(5, 11);
+        int randomXSize = Random.Range(5, 10);
+        int randomYSize = Random.Range(5, 10);
 
         Tiles[,] returnMap = Support.GenerateMap(randomXSize, randomYSize);
         while (returnMap[1, 1] == Tiles.Obstacle)
@@ -140,6 +140,22 @@ public class Support : MonoBehaviour
                 break;
         }
         return returnVector;
+    }
+
+    public static Direction DirectionForIndexVector(Vector2 vector) {
+        Direction returnDirection = Direction.Up;
+        if (vector == new Vector2(1,0)) {
+            returnDirection = Direction.Right;
+        } else if (vector == new Vector2(-1,0)) {
+            returnDirection = Direction.Left;
+        } else if (vector == new Vector2(0,1)) {
+            returnDirection = Direction.Up;
+        } else if (vector == new Vector2(0,-1)) {
+            returnDirection = Direction.Down;
+        } else {
+            throw new System.Exception("Should not have reached here");
+        }
+        return returnDirection;
     }
 
     public static int NumberOfRightTurns(Direction currentDirection, Direction newDirection) {

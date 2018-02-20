@@ -8,6 +8,6 @@ public class Zombie : Mover {
 
     public void InitZombie()
     {
-        Init(ZOMBIEMOVESPERTURN);
+        base.Init(ZOMBIEMOVESPERTURN);
     }
 }

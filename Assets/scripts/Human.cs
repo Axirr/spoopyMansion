@@ -7,6 +7,6 @@ public class Human : Mover {
     const int HUMANMOVESPERTURN = 5;
 
     public void InitHuman() {
-        Init(HUMANMOVESPERTURN);
+        base.Init(HUMANMOVESPERTURN);
     }
 }

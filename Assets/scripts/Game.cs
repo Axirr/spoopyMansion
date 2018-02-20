@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Priority_Queue;
 
 public class Game : MonoBehaviour
 {
@@ -281,34 +282,57 @@ public class Game : MonoBehaviour
             timeSinceLastInputMove = 0.0f;
         }
         Vector2 humanPosition = myView.GameObjectCurrentIndexPosition(characterTurnOrderList[0]);
-        List<Direction> pathToHuman = ShortestPathToHuman(humanPosition, myView.GameObjectCurrentIndexPosition(currentCharacter));
-        // No path to human
+        List<Direction> pathToHuman = ShortestPath2(humanPosition, myView.GameObjectCurrentIndexPosition(currentCharacter));
         if (pathToHuman.Count == 0)
         {
             mover.SetMovesToZero();
             return;
         }
-        // Next to human, attack behaviour
-        if (pathToHuman.Count == 1 && pathToHuman[0] == mover.Orientation())
-        {
-            Destroy(characterTurnOrderList[0]);
-            characterTurnOrderList = new List<GameObject>();
-        }
         else
         {
             Direction directionToMove = pathToHuman[0];
-            if (directionToMove != mover.Orientation()) {
-                int rightTurns = Support.NumberOfRightTurns(mover.Orientation(), directionToMove);
-                if (rightTurns != 3) {
-                    mover.Rotate(Direction.Right);
-                } else {
-                    mover.Rotate(Direction.Left);
-                }
-            } else if (mover.RemainingMoves() < Support.MOVES_PER_STEP) {
+            int requiredActionPoints = -1;
+            // FIX THIS TO USE ACTUAL STATS
+            if (directionToMove != mover.Orientation())
+            {
+                requiredActionPoints = mover.MovesPerRotation;
+            }
+            else if (pathToHuman.Count > 1)
+            {
+                requiredActionPoints = mover.MovesPerStep;
+            }
+            else if (pathToHuman.Count == 1)
+            {
+                requiredActionPoints = mover.MovesPerAttack;
+            }
+            if (requiredActionPoints > mover.RemainingMoves())
+            {
                 mover.SetMovesToZero();
-            } else {
-                Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(directionToMove);
-                mover.MoveTo(newLocation);   
+            }
+            else
+            {
+                if (directionToMove != mover.Orientation())
+                {
+                    int rightTurns = Support.NumberOfRightTurns(mover.Orientation(), directionToMove);
+                    if (rightTurns != 3)
+                    {
+                        mover.Rotate(Direction.Right);
+                    }
+                    else
+                    {
+                        mover.Rotate(Direction.Left);
+                    }
+                }
+                else if (pathToHuman.Count == 1)
+                {
+                    Destroy(characterTurnOrderList[0]);
+                    characterTurnOrderList = new List<GameObject>();
+                }
+                else
+                {
+                    Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(directionToMove);
+                    mover.MoveTo(newLocation);
+                }
             }
         }
     }
@@ -372,42 +396,88 @@ public class Game : MonoBehaviour
         return returnList;
     }
 
-    private List<Direction> ShortestPathToHuman(Vector2 goalPosition, Vector2 startingPosition) {
-        Path firstPath = ScriptableObject.CreateInstance<Path>();
-        firstPath.SetPosition(startingPosition);
-        List<Path> possiblePaths = new List<Path> {firstPath};
-        List<Vector2> exploredPositions = new List<Vector2>() { startingPosition };
-        while (possiblePaths.Count > 0) {
-            Path testPath = possiblePaths[0];
-            possiblePaths.RemoveAt(0);
-            Vector2 originalLocation = testPath.LatestPosition();
-            List<int> directionIntsToTry = new List<int>();
-            for (int i = 0; i < 4; i++) {
-                directionIntsToTry.Add(i);
+    private List<Direction> ShortestPath2(Vector2 goalSquare, Vector2 startSquare) {
+        const int STARTING_DISTANCE = 1000000;
+        List<Vector2> possibleSquares = new List<Vector2>();
+        for (int i = 0; i < mapHorizontalWidth; i++) {
+            for (int j = 0; j < mapVeticalWidth; j ++) {
+                possibleSquares.Add(new Vector2(i, j));
             }
-            //Support.shuffleListOfInt(directionIntsToTry);
-            for (int i = 0; i < 4; i++) {
-                Direction testDirection = (Direction)directionIntsToTry[i];
-                Vector2 newLocation = originalLocation + Support.IndexVectorForDirection(testDirection);
-                if (newLocation == goalPosition) {
-                    testPath.AddDirections(testDirection);
-                    return testPath.Directions();
+        }
+        Dictionary<Vector2, int> distanceDict = new Dictionary<Vector2, int>();
+        Dictionary<Vector2, Vector2> previousDict = new Dictionary<Vector2, Vector2>();
+        foreach (Vector2 square in possibleSquares) {
+            distanceDict[square] = STARTING_DISTANCE;
+            previousDict[square] = new Vector2(-1,-1);
+        }
+        distanceDict[startSquare] = 0;
+        List<Vector2> visitedSquares = new List<Vector2>();
+
+        Queue<Vector2> myQueue = new Queue<Vector2>();
+        myQueue.Enqueue(startSquare);
+        while (myQueue.Count > 0) {
+            Vector2 fromSquare = myQueue.Dequeue();
+            visitedSquares.Add(fromSquare);
+            List<Vector2> testSquares = new List<Vector2>();
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 testSquare = fromSquare + Support.IndexVectorForDirection((Direction)i);
+                if (testSquare == goalSquare || IsIndexSpaceWalkable(testSquare))
+                {
+                    testSquares.Add(testSquare);
                 }
-                if (IsIndexPositionWithinMap(newLocation) && !exploredPositions.Contains(newLocation) && IsIndexSpaceWalkable(newLocation)) {
-                    exploredPositions.Add(newLocation);
-                    Path novelPath = ScriptableObject.CreateInstance<Path>();
-                    novelPath.DefaultInit(newLocation);
-                    List<Direction> tempDirections = new List<Direction>();
-                    foreach (Direction myTempDirection in testPath.Directions()) {
-                        tempDirections.Add(myTempDirection);
-                    }
-                    novelPath.SetDirections(tempDirections);
-                    novelPath.AddDirections(testDirection);
-                    possiblePaths.Add(novelPath);
+            }
+            foreach (Vector2 testSquare in testSquares) {
+                int newDistance = distanceDict[fromSquare] + 1;
+                if (newDistance < distanceDict[testSquare]) {
+                    distanceDict[testSquare] = newDistance;
+                    previousDict[testSquare] = fromSquare;
+                }
+                if (! visitedSquares.Contains(testSquare)) {
+                    myQueue.Enqueue(testSquare);
+                }
+                if (testSquare == goalSquare) {
+                    break;
                 }
             }
         }
-        return new List<Direction>();
+        if (distanceDict[goalSquare] == STARTING_DISTANCE) {
+            print("No pathing solution found.");
+            return new List<Direction>();
+        } else {
+            List<Vector2> squareList = new List<Vector2>();
+            Vector2 currentSquare = goalSquare;
+            while (true)
+            {
+                squareList.Add(currentSquare);
+                if (distanceDict[currentSquare] == 0)
+                {
+                    break;
+                }
+                else
+                {
+                    currentSquare = previousDict[currentSquare];
+                }
+            }
+            List<Direction> returnList = directionListFromSquareList(squareList);
+            print("List of directions is: ");
+            foreach (Direction direction in returnList)
+            {
+                print(direction);
+            }
+            return returnList;
+        }
+    }
+
+    private List<Direction> directionListFromSquareList(List<Vector2> squareList) {
+        List<Direction> resultList = new List<Direction>();
+        int currentIndex = squareList.Count-1;
+        while (currentIndex > 0) {
+            Direction directionBetween = Support.DirectionForIndexVector(squareList[currentIndex-1]-squareList[currentIndex]);
+            resultList.Add(directionBetween);
+            currentIndex -= 1;
+        }
+        return resultList;
     }
 
     #endregion

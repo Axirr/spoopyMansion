@@ -4,13 +4,15 @@ using UnityEngine;
 
 public class Mover : MonoBehaviour {
 
-    const int StepMoves = 2;
-    const int TurnMoves = 1;
+
 
     #region Fields
-    protected int totalMovesPerTurn;
-    protected int remainingMovesPerTurn;
+    int totalMovesPerTurn;
+    int remainingMovesPerTurn;
     Direction orientation;
+    int stepMoves = 2;
+    int turnMoves = 1;
+    int attackMoves = 0;
 
 
     #endregion
@@ -21,6 +23,18 @@ public class Mover : MonoBehaviour {
 
     public int RemainingMoves() {
         return remainingMovesPerTurn;
+    }
+
+    public int MovesPerStep {
+        get { return this.stepMoves; }
+    }
+
+    public int MovesPerRotation {
+        get { return this.turnMoves; }
+    }
+
+    public int MovesPerAttack {
+        get { return this.attackMoves; }
     }
 
     #endregion
@@ -60,7 +74,7 @@ public class Mover : MonoBehaviour {
     public void MoveTo(Vector2 indexPosition) {
         View myView = Camera.main.GetComponent<View>();
         myView.MoveGameObjectToIndex(gameObject,indexPosition);
-        this.ReduceMovesBy(StepMoves);
+        this.ReduceMovesBy(stepMoves);
     }
 
     public void Rotate(Direction direction) {
@@ -107,7 +121,7 @@ public class Mover : MonoBehaviour {
         //print("NewDirection is " + directionToAssign);
         myView.RotateToDirection(this.gameObject,directionToAssign);
         this.orientation = directionToAssign;
-        this.ReduceMovesBy(TurnMoves);
+        this.ReduceMovesBy(turnMoves);
     }
 
     #endregion
