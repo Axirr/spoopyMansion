@@ -34,8 +34,8 @@ public class Support : MonoBehaviour
     }
 
     public static Tiles[,] GenerateRandomMap() {
-        int randomXSize = Random.Range(5, 10);
-        int randomYSize = Random.Range(5, 10);
+        int randomXSize = Random.Range(5, 11);
+        int randomYSize = Random.Range(5, 11);
 
         Tiles[,] returnMap = Support.GenerateMap(randomXSize, randomYSize);
         while (returnMap[1, 1] == Tiles.Obstacle)
@@ -67,6 +67,8 @@ public class Support : MonoBehaviour
             for (int j = 1; j < yLength - 1; j++) {
                 tileSelector = Random.Range(0, 11);
                 switch (tileSelector) {
+                    case 8:
+                    case 9:
                     case 10:
                         tileType = Tiles.Obstacle;
                         break;
@@ -232,6 +234,56 @@ public class Support : MonoBehaviour
                 break;
         }
         return numberOfRightTurns;
+    }
+
+    public static int MinimumTurns(Direction currentDirection, Direction newDirection) {
+        int numberRightTurns = NumberOfRightTurns(currentDirection, newDirection);
+        if (numberRightTurns == 3) {
+            numberRightTurns = 1;
+        }
+        return numberRightTurns;
+    }
+
+    public static Direction DirectionRotated(Direction currentObjectOrientation, Direction direction) {
+        Direction directionToAssign = Direction.Up;
+        switch (direction)
+        {
+            case Direction.Right:
+                switch (currentObjectOrientation)
+                {
+                    case Direction.Up:
+                        directionToAssign = Direction.Right;
+                        break;
+                    case Direction.Right:
+                        directionToAssign = Direction.Down;
+                        break;
+                    case Direction.Down:
+                        directionToAssign = Direction.Left;
+                        break;
+                    case Direction.Left:
+                        directionToAssign = Direction.Up;
+                        break;
+                }
+                break;
+            case Direction.Left:
+                switch (currentObjectOrientation)
+                {
+                    case Direction.Up:
+                        directionToAssign = Direction.Left;
+                        break;
+                    case Direction.Right:
+                        directionToAssign = Direction.Up;
+                        break;
+                    case Direction.Down:
+                        directionToAssign = Direction.Right;
+                        break;
+                    case Direction.Left:
+                        directionToAssign = Direction.Down;
+                        break;
+                }
+                break;
+        }
+        return directionToAssign;
     }
 }
 

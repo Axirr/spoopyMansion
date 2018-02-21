@@ -81,41 +81,7 @@ public class Mover : MonoBehaviour {
         View myView = Camera.main.GetComponent<View>();
         Direction currentObjectOrientation = this.orientation;
         Direction directionToAssign = Direction.Down;
-        switch (direction) {
-            case Direction.Right:
-                switch (currentObjectOrientation) {
-                    case Direction.Up:
-                        directionToAssign = Direction.Right;    
-                        break;
-                    case Direction.Right:
-                        directionToAssign = Direction.Down;
-                        break;
-                    case Direction.Down:
-                        directionToAssign = Direction.Left;
-                        break;
-                    case Direction.Left:
-                        directionToAssign = Direction.Up;
-                        break;
-                }
-                break;
-            case Direction.Left:
-                switch (currentObjectOrientation)
-                {
-                    case Direction.Up:
-                        directionToAssign = Direction.Left;
-                        break;
-                    case Direction.Right:
-                        directionToAssign = Direction.Up;
-                        break;
-                    case Direction.Down:
-                        directionToAssign = Direction.Right;
-                        break;
-                    case Direction.Left:
-                        directionToAssign = Direction.Down;
-                        break;
-                }
-                break;
-        }
+        directionToAssign = Support.DirectionRotated(currentObjectOrientation,direction);
         //print("Rotation direction is " + direction);
         //print("Originaldirection of character is " + this.orientation);
         //print("NewDirection is " + directionToAssign);

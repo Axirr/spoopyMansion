@@ -310,6 +310,7 @@
     <Compile Include="Assets\scripts\HUD.cs" />
     <Compile Include="Assets\scripts\Human.cs" />
     <Compile Include="Assets\scripts\Mover.cs" />
+    <Compile Include="Assets\scripts\OrientedSquare.cs" />
     <Compile Include="Assets\scripts\Path.cs" />
     <Compile Include="Assets\scripts\priority queue\Priority Queue\FastPriorityQueue.cs" />
     <Compile Include="Assets\scripts\priority queue\Priority Queue\FastPriorityQueueNode.cs" />
@@ -321,7 +322,6 @@
     <Compile Include="Assets\scripts\priority queue\Priority Queue\SimplePriorityQueue.cs" />
     <Compile Include="Assets\scripts\priority queue\Priority Queue\StablePriorityQueue.cs" />
     <Compile Include="Assets\scripts\priority queue\Priority Queue\StablePriorityQueueNode.cs" />
-    <Compile Include="Assets\scripts\Queue.cs" />
     <Compile Include="Assets\scripts\Support.cs" />
     <Compile Include="Assets\scripts\UnitTests.cs" />
     <Compile Include="Assets\scripts\View.cs" />
