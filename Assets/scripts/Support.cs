@@ -11,6 +11,7 @@ public class Support : MonoBehaviour
     public const string MAP_TAG = "map";
     public const string MOVER_TAG = "mover";
     public const string HUD_TAG = "hud";
+    public const string MARKER_TAG = "pathMarker";
     public const int MOVES_PER_STEP = 2;
     public const int MOVES_PER_Rotation = 1;
     public static List<Tiles> PROHIBITED_TILES_HUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall };
@@ -34,8 +35,8 @@ public class Support : MonoBehaviour
     }
 
     public static Tiles[,] GenerateRandomMap() {
-        int randomXSize = Random.Range(5, 11);
-        int randomYSize = Random.Range(5, 11);
+        int randomXSize = Random.Range(14, 15);
+        int randomYSize = Random.Range(14, 15);
 
         Tiles[,] returnMap = Support.GenerateMap(randomXSize, randomYSize);
         while (returnMap[1, 1] == Tiles.Obstacle)
@@ -67,7 +68,7 @@ public class Support : MonoBehaviour
             for (int j = 1; j < yLength - 1; j++) {
                 tileSelector = Random.Range(0, 11);
                 switch (tileSelector) {
-                    case 8:
+                    //case 8:
                     case 9:
                     case 10:
                         tileType = Tiles.Obstacle;

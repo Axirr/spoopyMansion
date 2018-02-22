@@ -69,7 +69,7 @@ public class Game : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.R)) {
-            GameObject[] GOArray = GameObject.FindGameObjectsWithTag("pathMarker");
+            GameObject[] GOArray = GameObject.FindGameObjectsWithTag(Support.MARKER_TAG);
             foreach (GameObject item in GOArray) {
                 Destroy(item);
             }
@@ -135,6 +135,7 @@ public class Game : MonoBehaviour
     {
         Support.DestroyWithTag(Support.MAP_TAG);
         Support.DestroyWithTag(Support.MOVER_TAG);
+        Support.DestroyWithTag(Support.MARKER_TAG);
         SetMap(mansionMap);
         myView.DrawMap(mansionMap);
         characterTurnOrderList = new List<GameObject>();
@@ -242,7 +243,6 @@ public class Game : MonoBehaviour
         float verticalInput = Input.GetAxisRaw("Vertical");
         float rotationInput = Input.GetAxisRaw("Rotation");
         bool skipInput = Input.GetKeyDown(KeyCode.P);
-        Direction currentMoverDirection = currentCharacter.GetComponent<Mover>().Orientation();
         if (timeSinceLastInputMove > MovementInputDelay)
         {
             bool didMove = false;
@@ -548,7 +548,7 @@ public class Game : MonoBehaviour
 
     private List<Vector2> ShortestPath3(Vector2 goalSquare, Vector2 startSquare)
     {
-        GameObject[] GOArray = GameObject.FindGameObjectsWithTag("pathMarker");
+        GameObject[] GOArray = GameObject.FindGameObjectsWithTag(Support.MARKER_TAG);
         foreach (GameObject item in GOArray)
         {
             Destroy(item);
@@ -576,18 +576,20 @@ public class Game : MonoBehaviour
         OrientedSquare startOrientedSquare = new OrientedSquare(startSquare,currentMover.Orientation());
         distanceDict[startOrientedSquare] = 0;
         List<OrientedSquare> visitedSquares = new List<OrientedSquare>();
+        List<Vector2> drawnSquares = new List<Vector2>();
 
         SimplePriorityQueue<OrientedSquare, float> myQueue = new SimplePriorityQueue<OrientedSquare, float>();
         //Queue<Vector2> myQueue = new Queue<Vector2>();
         myQueue.Enqueue(startOrientedSquare,distanceDict[startOrientedSquare]+(startSquare-goalSquare).magnitude);
         GameObject trianglePrefab = Resources.Load("Triangle") as GameObject;
+        float totalDistanceApproximate = Mathf.Abs(goalSquare.x - startSquare.x) + Mathf.Abs(goalSquare.y - goalSquare.y);
         int checkCount = 0;
         bool isSolved = false;
         while (myQueue.Count > 0 && !isSolved)
         {
             checkCount += 1;
             //print("Number of checks is" + checkCount);
-            float priority = myQueue.GetPriority(myQueue.First);
+            //float priority = myQueue.GetPriority(myQueue.First);
             OrientedSquare fromOrientedSquare = myQueue.Dequeue();
             Vector2 fromSquare = fromOrientedSquare.Position;
             Direction fromDirection = fromOrientedSquare.Orientation;
@@ -620,7 +622,31 @@ public class Game : MonoBehaviour
                 }
                 if (!visitedSquares.Contains(testSquare))
                 {
-                    float heuristicDistance = (testSquare.Position - goalSquare).magnitude;
+                    float xToMove = goalSquare.x - testSquare.Position.x;
+                    float yToMove = goalSquare.y - testSquare.Position.y;
+                    int minimumRotations = 0;
+                    List<Direction> directionList = new List<Direction>();
+                    if (xToMove < 0) {
+                        directionList.Add(Direction.Left);
+                    } else if (xToMove > 0) {
+                        directionList.Add(Direction.Right);
+                    }
+                    if (yToMove < 0) {
+                        directionList.Add(Direction.Down);
+                    } else if (yToMove > 0) {
+                        directionList.Add(Direction.Up);
+                    }
+                    foreach (Direction myDirection in directionList) {
+                        int tempNumberTurns = Support.MinimumTurns(currentMover.Orientation(),myDirection);
+                        if (tempNumberTurns > minimumRotations) {
+                            minimumRotations = tempNumberTurns;
+                        }
+                    }
+                    if (minimumRotations > 2) {
+                        print("ERROR, SHOULD NOT HAVE MORE THAN 2 MINIMUM ROTATIONS");
+                    }
+                    float heuristicDistance = (Mathf.Abs(xToMove) + Mathf.Abs(yToMove)) * currentMover.MovesPerStep + 
+                                                                                                      minimumRotations*currentMover.MovesPerRotation;
                     myQueue.Enqueue(testSquare, distanceDict[testSquare] + heuristicDistance);
                 }
                 //print("Test square is: " + testSquare.Position);
@@ -630,15 +656,19 @@ public class Game : MonoBehaviour
                     isSolved = true;
                 }
 
-                GameObject marker = Instantiate<GameObject>(trianglePrefab, new Vector3(0, 0, 0), Quaternion.identity);
-                float colorNumber = (float)checkCount * 5f / 255.0f;
-                if (colorNumber > 1.0f)
-                {
-                    colorNumber = 1.0f;
+                if (!(drawnSquares.Contains(testSquare.Position))) {
+                    drawnSquares.Add(testSquare.Position);
+                    GameObject marker = Instantiate<GameObject>(trianglePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+
+                    float colorNumber = checkCount / (totalDistanceApproximate * 8);
+                    if (colorNumber > 1.0f)
+                    {
+                        colorNumber = 1.0f;
+                    }
+                    Color myColor = new Color(colorNumber, 0, 0, 1f);
+                    marker.GetComponent<SpriteRenderer>().material.color = myColor;
+                    myView.MoveGameObjectToIndex(marker, testSquare.Position);
                 }
-                Color myColor = new Color(colorNumber, 0, 0, 1f);
-                marker.GetComponent<SpriteRenderer>().material.color = myColor;
-                myView.MoveGameObjectToIndex(marker, testSquare.Position);
             }
         }
         print("Number of checks is: " + checkCount);
