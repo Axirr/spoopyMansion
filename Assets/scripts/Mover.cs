@@ -21,8 +21,13 @@ public class Mover : MonoBehaviour {
 
     #region Properties
 
-    public int RemainingMoves() {
-        return remainingMovesPerTurn;
+    public int RemainingMoves {
+        get { return remainingMovesPerTurn; }
+    }
+
+    public Direction Orientation
+    {
+        get { return this.orientation; }
     }
 
     public int MovesPerStep {
@@ -61,10 +66,6 @@ public class Mover : MonoBehaviour {
         remainingMovesPerTurn = 0;
     }
 
-    public Direction Orientation() {
-        return this.orientation;
-    }
-
     #endregion
 
 
@@ -81,27 +82,11 @@ public class Mover : MonoBehaviour {
         View myView = Camera.main.GetComponent<View>();
         Direction currentObjectOrientation = this.orientation;
         Direction directionToAssign = Direction.Down;
-        directionToAssign = Support.DirectionRotated(currentObjectOrientation,direction);
-        //print("Rotation direction is " + direction);
-        //print("Originaldirection of character is " + this.orientation);
-        //print("NewDirection is " + directionToAssign);
+        directionToAssign = Support.DirectionRotatedLeftRight(currentObjectOrientation,direction);
         myView.RotateToDirection(this.gameObject,directionToAssign);
         this.orientation = directionToAssign;
         this.ReduceMovesBy(turnMoves);
     }
 
     #endregion
-
-
-    void Start()
-    {
-
-    }
-
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
-
 }

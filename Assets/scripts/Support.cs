@@ -27,7 +27,7 @@ public class Support : MonoBehaviour
         return tempArray;
     }
 
-    public static void DestroyWithTag(string myTag) {
+    public static void DestroyAllWithTag(string myTag) {
         GameObject[] gameObjectsToDelete = GameObject.FindGameObjectsWithTag(myTag);
         foreach (GameObject myGameObject in gameObjectsToDelete) {
             Destroy(myGameObject);
@@ -39,10 +39,6 @@ public class Support : MonoBehaviour
         int randomYSize = Random.Range(14, 15);
 
         Tiles[,] returnMap = Support.GenerateMap(randomXSize, randomYSize);
-        while (returnMap[1, 1] == Tiles.Obstacle)
-        {
-            returnMap = Support.GenerateMap(randomXSize, randomYSize);
-        }
         return returnMap;
     }
 
@@ -238,15 +234,15 @@ public class Support : MonoBehaviour
     }
 
     public static int MinimumTurns(Direction currentDirection, Direction newDirection) {
-        int numberRightTurns = NumberOfRightTurns(currentDirection, newDirection);
-        if (numberRightTurns == 3) {
-            numberRightTurns = 1;
+        int numberTurns = NumberOfRightTurns(currentDirection, newDirection);
+        if (numberTurns == 3) {
+            numberTurns = 1;
         }
-        return numberRightTurns;
+        return numberTurns;
     }
 
-    public static Direction DirectionRotated(Direction currentObjectOrientation, Direction direction) {
-        Direction directionToAssign = Direction.Up;
+    public static Direction DirectionRotatedLeftRight(Direction currentObjectOrientation, Direction direction) {
+        Direction directionToAssign = currentObjectOrientation;
         switch (direction)
         {
             case Direction.Right:
@@ -286,24 +282,4 @@ public class Support : MonoBehaviour
         }
         return directionToAssign;
     }
-}
-
-public enum Tiles
-{
-    Door,
-    Floor,
-    Obstacle,
-    Wall
-}
-
-public enum Direction {
-    Up = 0,
-    Right = 1,
-    Down = 2,
-    Left = 3,
-}
-
-public enum MoverType {
-    Human,
-    Zombie
 }

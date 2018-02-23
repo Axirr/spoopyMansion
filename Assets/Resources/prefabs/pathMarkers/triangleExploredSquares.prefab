@@ -21,7 +21,7 @@ GameObject:
   - component: {fileID: 4950084204229302}
   - component: {fileID: 212622573821181200}
   m_Layer: 0
-  m_Name: Triangle
+  m_Name: triangleExploredSquares
   m_TagString: pathMarker
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

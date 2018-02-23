@@ -18,19 +18,20 @@ public class View : MonoBehaviour {
     }
 
 
-    public void UpdateMap(Tiles[,] myMap) {
-        horizontalDrawOffset = -myMap.GetLength(0) / 2.0f + 0.5f;
-        verticalDrawOffset = -myMap.GetLength(1) / 2.0f + 0.5f;
+    public void UpdateMapOffsets(float horizontalLength, float verticalLegnth) {
+        horizontalDrawOffset = -horizontalLength / 2.0f + 0.5f;
+        verticalDrawOffset = -verticalLegnth / 2.0f + 0.5f;
     }
 
     #region GameObject current position and moving functions
 
-    public void MoveGameObjectToIndex(GameObject myGameObject,Vector2 index) {
-        myGameObject.transform.position = this.IndicesToMapCoordinates(index);    
+    public Vector2 GameObjectCurrentIndexPosition(GameObject myGameObject)
+    {
+        return this.MapToIndicesCoordinates(myGameObject.transform.position);
     }
 
-    public Vector2 GameObjectCurrentIndexPosition(GameObject myGameObject) {
-        return this.MapToIndicesCoordinates(myGameObject.transform.position);
+    public void MoveGameObjectToIndex(GameObject myGameObject,Vector2 index) {
+        myGameObject.transform.position = this.IndicesToMapCoordinates(index);    
     }
 
     public void RotateGameObjectLeftRight(GameObject myGameObject, Direction direction) {
@@ -42,13 +43,13 @@ public class View : MonoBehaviour {
                 myGameObject.transform.eulerAngles = new Vector3(0, 0, -90);
                 break;
             default:
-                break;
+                throw new System.Exception("Error, objects can only be rotated left or right.");
         }
     }
 
     public void RotateToDirection(GameObject myGameObject, Direction newDirection) {
         Mover myMover = myGameObject.GetComponent<Mover>();
-        Direction currentDirection = myMover.Orientation();
+        Direction currentDirection = myMover.Orientation;
         int numberOfRightTurns = Support.NumberOfRightTurns(currentDirection,newDirection);
         int numberOfLeftTurns = 4 - numberOfRightTurns;
         print("Number of right turns is: " + numberOfRightTurns);

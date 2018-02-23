@@ -31,6 +31,8 @@ public class OrientedSquare
 
     #endregion
 
+
+
     #region Methods
 
     public override bool Equals(object obj)

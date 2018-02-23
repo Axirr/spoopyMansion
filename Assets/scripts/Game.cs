@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Priority_Queue;
+using System.Linq;
 
 public class Game : MonoBehaviour
 {
@@ -69,10 +70,7 @@ public class Game : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.R)) {
-            GameObject[] GOArray = GameObject.FindGameObjectsWithTag(Support.MARKER_TAG);
-            foreach (GameObject item in GOArray) {
-                Destroy(item);
-            }
+            Support.DestroyAllWithTag(Support.MARKER_TAG);
             return;
         }
 
@@ -89,19 +87,19 @@ public class Game : MonoBehaviour
         if (currentMover is Human && 
             currentMap[(int)currentPlayerIndexPosition.x, (int)currentPlayerIndexPosition.y] == Tiles.Door) {
             roundsBeaten += 1;
-            print("The number of rounds beaten is: " + roundsBeaten);
+            print(string.Format("The number of rounds beaten is: {0}", roundsBeaten));
             ResetMapToRandom();
             CreateHumanAndZombies(zombiesPerRoom);
             return;
         }
         // Change character when out of moves
-        if (currentMover.RemainingMoves() <= 0)
+        if (currentMover.RemainingMoves <= 0)
         {
             currentMover.ResetMoves();
             int newIndex = (characterTurnOrderList.IndexOf(currentCharacter) + 1) % characterTurnOrderList.Count;
             currentCharacter = characterTurnOrderList[newIndex];
             currentMover = currentCharacter.GetComponent<Mover>();
-            int maxHumanMoves = characterTurnOrderList[0].GetComponent<Mover>().RemainingMoves();
+            int maxHumanMoves = characterTurnOrderList[0].GetComponent<Mover>().RemainingMoves;
             hud.SetCurrentActionPoints(maxHumanMoves);
         }
         if (currentMover is Human)
@@ -128,14 +126,14 @@ public class Game : MonoBehaviour
         currentMap = myMap;
         mapHorizontalWidth = myMap.GetLength(0);
         mapVeticalWidth = myMap.GetLength(1);
-        myView.UpdateMap(currentMap);
+        myView.UpdateMapOffsets(mapHorizontalWidth,mapVeticalWidth);
     }
 
     public void ResetMap(Tiles[,] mansionMap)
     {
-        Support.DestroyWithTag(Support.MAP_TAG);
-        Support.DestroyWithTag(Support.MOVER_TAG);
-        Support.DestroyWithTag(Support.MARKER_TAG);
+        Support.DestroyAllWithTag(Support.MAP_TAG);
+        Support.DestroyAllWithTag(Support.MOVER_TAG);
+        Support.DestroyAllWithTag(Support.MARKER_TAG);
         SetMap(mansionMap);
         myView.DrawMap(mansionMap);
         characterTurnOrderList = new List<GameObject>();
@@ -179,7 +177,7 @@ public class Game : MonoBehaviour
         for (int i = 0; i < numberOfZombies; i++) {
             CreateCharacter(MoverType.Zombie,ValidRandomIndexFloorPosition());
         }
-        hud.SetCurrentActionPoints(currentCharacter.GetComponent<Mover>().RemainingMoves());
+        hud.SetCurrentActionPoints(currentCharacter.GetComponent<Mover>().RemainingMoves);
     }
 
 
@@ -276,7 +274,7 @@ public class Game : MonoBehaviour
 
             if (didMove) { 
                 timeSinceLastInputMove = 0.0f;
-                hud.SetCurrentActionPoints(mover.RemainingMoves());
+                hud.SetCurrentActionPoints(mover.RemainingMoves);
             }
         }
     }
@@ -291,35 +289,6 @@ public class Game : MonoBehaviour
         }
         Vector2 humanPosition = myView.GameObjectCurrentIndexPosition(characterTurnOrderList[0]);
         List<Vector2> pathToHuman = ShortestPath3(humanPosition, myView.GameObjectCurrentIndexPosition(currentCharacter));
-        //List<Vector2> secondPathToHuman = ShortestPath2(humanPosition, myView.GameObjectCurrentIndexPosition(currentCharacter));
-        //bool areEqual = true;
-        //if (pathToHuman.Count != secondPathToHuman.Count) {
-        //    print("PATHS ARE DIFFERENT LENGTHS!");
-        //    areEqual = false;
-        //} else {
-        //    for (int i = 0; i < pathToHuman.Count; i++) {
-        //        if (!(pathToHuman[i].Equals(secondPathToHuman[i]))) {
-        //            areEqual = false;
-        //            break;
-        //        }
-        //    }
-        //}
-        //if (!(areEqual)) {
-        //    print("SHORTESTPATH3 BREAKDOWN");
-        //    foreach(Vector2 square in pathToHuman) {
-        //        print(square);
-        //    }
-        //    print("SHORTESTPATH2 BREAKDOWN");
-        //    foreach(Vector2 square in secondPathToHuman) {
-        //        print(square);
-        //    }
-        //    print("Pathing functions disagree!");
-        //    print("Length of ShortestPath3 is: " + pathToHuman.Count);
-        //    print("Length of ShortestPath2 is: " + secondPathToHuman.Count);
-        //} else {
-        //    print("THEY'RE EQUAL!");
-        //}
-        //if (pathToHuman.Count == 0)
         if (pathToHuman.Count == 0)
         {
             mover.SetMovesToZero();
@@ -329,7 +298,7 @@ public class Game : MonoBehaviour
         {
             Direction directionToMove = Support.DirectionForIndexVector(pathToHuman[1]-myView.GameObjectCurrentIndexPosition(currentCharacter));
             int requiredActionPoints = -1;
-            if (directionToMove != mover.Orientation())
+            if (directionToMove != mover.Orientation)
             {
                 requiredActionPoints = mover.MovesPerRotation;
             }
@@ -342,15 +311,15 @@ public class Game : MonoBehaviour
                 requiredActionPoints = mover.MovesPerAttack;
             }
 
-            if (requiredActionPoints > mover.RemainingMoves())
+            if (requiredActionPoints > mover.RemainingMoves)
             {
                 mover.SetMovesToZero();
             }
             else
             {
-                if (directionToMove != mover.Orientation())
+                if (directionToMove != mover.Orientation)
                 {
-                    int rightTurns = Support.NumberOfRightTurns(mover.Orientation(), directionToMove);
+                    int rightTurns = Support.NumberOfRightTurns(mover.Orientation, directionToMove);
                     if (rightTurns != 3)
                     {
                         mover.Rotate(Direction.Right);
@@ -377,8 +346,8 @@ public class Game : MonoBehaviour
     private bool TryMoveForMoverInDirection(Mover mover, Direction direction)
     {
         Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(direction);
-        Direction currentMoverOrientation = mover.Orientation();
-        if (IsIndexSpaceWalkable(newLocation) && currentMoverOrientation == direction && mover.RemainingMoves() >= Support.MOVES_PER_STEP)
+        Direction currentMoverOrientation = mover.Orientation;
+        if (IsIndexSpaceWalkable(newLocation) && currentMoverOrientation == direction && mover.RemainingMoves >= Support.MOVES_PER_STEP)
         {
             mover.MoveTo(newLocation);
             return true;
@@ -433,174 +402,56 @@ public class Game : MonoBehaviour
         return returnList;
     }
 
-    //private List<Vector2> ShortestPath2(Vector2 goalSquare, Vector2 startSquare) {
-    //    print("SHORTESTPATH 2: ");
-    //    Mover currentMover = currentCharacter.GetComponent<Mover>();
-    //    const int STARTING_DISTANCE = 1000000;
-    //    List<Vector2> possibleSquares = new List<Vector2>();
-    //    for (int i = 0; i < mapHorizontalWidth; i++) {
-    //        for (int j = 0; j < mapVeticalWidth; j ++) {
-    //            possibleSquares.Add(new Vector2(i, j));
-    //        }
-    //    }
-    //    Dictionary<Vector2, int> distanceDict = new Dictionary<Vector2, int>();
-    //    Dictionary<Vector2, Vector2> previousDict = new Dictionary<Vector2, Vector2>();
-    //    foreach (Vector2 square in possibleSquares) {
-    //        distanceDict[square] = STARTING_DISTANCE;
-    //        previousDict[square] = new Vector2(-1,-1);
-    //    }
-    //    distanceDict[startSquare] = 0;
-    //    List<Vector2> visitedSquares = new List<Vector2>();
-
-    //    SimplePriorityQueue<OrientedSquare, float> myQueue = new SimplePriorityQueue<OrientedSquare, float>();
-    //    //Queue<Vector2> myQueue = new Queue<Vector2>();
-    //    myQueue.Enqueue(new OrientedSquare(startSquare,currentMover.Orientation()),0);
-    //    GameObject trianglePrefab = Resources.Load("Triangle") as GameObject;
-    //    int checkCount = 0;
-    //    bool isSolved = false;
-    //    while (myQueue.Count > 0 && !isSolved) {
-    //        checkCount += 1;
-    //        //print("Number of checks is" + checkCount);
-    //        float priority = myQueue.GetPriority(myQueue.First);
-    //        OrientedSquare fromOrientedSquare = myQueue.Dequeue();
-    //        Vector2 fromSquare = fromOrientedSquare.Position;
-    //        Direction fromDirection = fromOrientedSquare.Orientation;
-
-
-
-    //        // print("Test square is: " + fromSquare + " with a true distance of " + distanceDict[fromSquare] + " and a heuristic distance of: " + priority);
-    //        visitedSquares.Add(fromSquare);
-    //        // Construct test squares
-    //        List<Vector2> testSquares = new List<Vector2>();
-    //        for (int i = 0; i < 4; i++) {
-    //            Vector2 newSquare = fromSquare + Support.IndexVectorForDirection((Direction)i);
-    //            if (newSquare == goalSquare || IsIndexSpaceWalkable(newSquare)) {
-    //                testSquares.Add(newSquare);
-    //            }
-    //        }
-    //        foreach (Vector2 testSquare in testSquares) {
-    //            int actionPoints = 0;
-    //            Direction travelDirection = Support.DirectionForIndexVector(testSquare - fromSquare);
-    //            OrientedSquare testOrientedSquare = new OrientedSquare(testSquare, travelDirection);
-    //            actionPoints += currentMover.MovesPerStep + Support.MinimumTurns(fromDirection, travelDirection)*currentMover.MovesPerRotation;
-    //            int newDistance = distanceDict[fromSquare] + actionPoints;
-    //            if (newDistance < distanceDict[testSquare]) {
-    //                distanceDict[testSquare] = newDistance;
-    //                previousDict[testSquare] = fromSquare;
-    //            }
-    //            OrientedSquare square1 = new OrientedSquare(new Vector2(1, 1),Direction.Up);
-    //            OrientedSquare square2 = new OrientedSquare(new Vector2(1, 1), Direction.Up);
-    //            //if (square1.Equals(square2)) {
-    //            //    print("Comparison worked properly!");
-    //            //    break;
-    //            //} else {
-    //            //    print("Comparison did not work!");
-    //            //    break;
-    //            //}
-    //            // print("Current test oriented square is: " + testOrientedSquare.Position + " " + testOrientedSquare.Orientation);
-    //            if (! visitedSquares.Contains(testSquare)) {
-    //                float heuristicDistance = (testSquare-goalSquare).magnitude;
-    //                myQueue.Enqueue(testOrientedSquare,distanceDict[testSquare]+heuristicDistance);
-    //                //myQueue.Enqueue(testSquare, distanceDict[testSquare]);
-    //            }
-    //            //print("Test square is: " + testSquare);
-    //            //print("Goal square is: " + goalSquare);
-    //            if (testSquare == goalSquare) {
-    //                isSolved = true;
-    //            }
-    //            GameObject marker = Instantiate<GameObject>(trianglePrefab, new Vector3(0, 0, 0), Quaternion.identity);
-    //            myView.MoveGameObjectToIndex(marker, testSquare);
-    //        }
-    //    }
-    //    print("Number of checks is: " + checkCount);
-    //    //GameObject[] GOArray = GameObject.FindGameObjectsWithTag("pathMarker");
-    //    //foreach (GameObject item in GOArray) {
-    //    //    Destroy(item);
-    //    //}
-    //    if (!isSolved) {
-    //        print("No pathing solution found.");
-    //        return new List<Vector2>();
-    //    } else {
-    //        print("Total distance is: " + distanceDict[goalSquare]);
-    //        List<Vector2> squareList = new List<Vector2>();
-    //        Vector2 currentSquare = goalSquare;
-    //        while (true)
-    //        {
-    //            squareList.Add(currentSquare);
-    //            if (distanceDict[currentSquare] == 0)
-    //            {
-    //                break;
-    //            }
-    //            else
-    //            {
-    //                currentSquare = previousDict[currentSquare];
-    //            }
-    //        }
-    //        squareList.Reverse();
-    //        //print("List of tiles is: ");
-    //        //foreach (Vector2 square in squareList)
-    //        //{
-    //        //    print(square);
-    //        //}
-    //        return squareList;
-    //    }
-    //}
-
     private List<Vector2> ShortestPath3(Vector2 goalSquare, Vector2 startSquare)
     {
-        GameObject[] GOArray = GameObject.FindGameObjectsWithTag(Support.MARKER_TAG);
-        foreach (GameObject item in GOArray)
-        {
-            Destroy(item);
-        }
-        print("SHORTESTPATH 3: ");
+        Support.DestroyAllWithTag(Support.MARKER_TAG);
         Mover currentMover = currentCharacter.GetComponent<Mover>();
+
+        Dictionary<OrientedSquare, int> distanceDict = new Dictionary<OrientedSquare, int>();
         const int STARTING_DISTANCE = 1000000;
-        List<OrientedSquare> possibleSquares = new List<OrientedSquare>();
+        Dictionary<OrientedSquare, OrientedSquare> previousDict = new Dictionary<OrientedSquare, OrientedSquare>();
+        Vector2 nullVector = new Vector2(-1,-1);
+        Direction[] directionArray = { Direction.Up, Direction.Down, Direction.Left, Direction.Right };
         for (int i = 0; i < mapHorizontalWidth; i++)
         {
             for (int j = 0; j < mapVeticalWidth; j++)
             {
-                for (int k = 0; k < 4; k++) {
-                    possibleSquares.Add(new OrientedSquare(new Vector2(i, j),(Direction)k));
+                foreach (var direction in directionArray) {
+                    OrientedSquare createdSquare = new OrientedSquare(new Vector2(i, j),direction);
+                    distanceDict[createdSquare] = STARTING_DISTANCE;
+                    previousDict[createdSquare] = new OrientedSquare(nullVector, Direction.Up);
                 }
             }
         }
-        Dictionary<OrientedSquare, int> distanceDict = new Dictionary<OrientedSquare, int>();
-        Dictionary<OrientedSquare, OrientedSquare> previousDict = new Dictionary<OrientedSquare, OrientedSquare>();
-        foreach (OrientedSquare square in possibleSquares)
-        {
-            distanceDict[square] = STARTING_DISTANCE;
-            previousDict[square] = new OrientedSquare(new Vector2(-1, -1),Direction.Up);
-        }
-        OrientedSquare startOrientedSquare = new OrientedSquare(startSquare,currentMover.Orientation());
-        distanceDict[startOrientedSquare] = 0;
         List<OrientedSquare> visitedSquares = new List<OrientedSquare>();
-        List<Vector2> drawnSquares = new List<Vector2>();
+
+
 
         SimplePriorityQueue<OrientedSquare, float> myQueue = new SimplePriorityQueue<OrientedSquare, float>();
-        //Queue<Vector2> myQueue = new Queue<Vector2>();
-        myQueue.Enqueue(startOrientedSquare,distanceDict[startOrientedSquare]+(startSquare-goalSquare).magnitude);
-        GameObject trianglePrefab = Resources.Load("Triangle") as GameObject;
-        float totalDistanceApproximate = Mathf.Abs(goalSquare.x - startSquare.x) + Mathf.Abs(goalSquare.y - goalSquare.y);
+        OrientedSquare startOrientedSquare = new OrientedSquare(startSquare, currentMover.Orientation);
+        distanceDict[startOrientedSquare] = 0;
+        myQueue.Enqueue(startOrientedSquare,distanceDict[startOrientedSquare]+heuristicDistanceStartToGoal(startOrientedSquare.Position,goalSquare,currentMover));
+        float totalDistanceApproximate = heuristicDistanceStartToGoal(startOrientedSquare.Position,goalSquare,currentMover);
         int checkCount = 0;
         bool isSolved = false;
+
+        // For drawing pathfinding AI
+        List<Vector2> squaresToDraw = new List<Vector2>();
+        GameObject circlePathMarkerPrefab = Resources.Load(@"prefabs/pathMarkers/circleOptimalPath") as GameObject;
+
         while (myQueue.Count > 0 && !isSolved)
         {
             checkCount += 1;
-            //print("Number of checks is" + checkCount);
-            //float priority = myQueue.GetPriority(myQueue.First);
             OrientedSquare fromOrientedSquare = myQueue.Dequeue();
+            visitedSquares.Add(fromOrientedSquare);
             Vector2 fromSquare = fromOrientedSquare.Position;
             Direction fromDirection = fromOrientedSquare.Orientation;
 
-            // print("Test square is: " + fromSquare + " with a true distance of " + distanceDict[fromSquare] + " and a heuristic distance of: " + priority);
-            visitedSquares.Add(fromOrientedSquare);
-            // Construct test squares
-            List<OrientedSquare> testSquares = new List<OrientedSquare>();
-            //Create "neighbours"
-            testSquares.Add(new OrientedSquare(fromSquare,Support.DirectionRotated(fromDirection,Direction.Right)));
-            testSquares.Add(new OrientedSquare(fromSquare, Support.DirectionRotated(fromDirection, Direction.Left)));
+            // Construct neighbour squares
+            List<OrientedSquare> testSquares = new List<OrientedSquare>() { 
+                new OrientedSquare(fromSquare, Support.DirectionRotatedLeftRight(fromDirection, Direction.Right)),
+                new OrientedSquare(fromSquare, Support.DirectionRotatedLeftRight(fromDirection, Direction.Left))
+            };
             Vector2 forwardSquare = fromSquare + Support.IndexVectorForDirection(fromDirection);
             if (IsIndexSpaceWalkable(forwardSquare) || forwardSquare == goalSquare) {
                 testSquares.Add(new OrientedSquare(forwardSquare, fromDirection));
@@ -608,13 +459,8 @@ public class Game : MonoBehaviour
 
             foreach (OrientedSquare testSquare in testSquares)
             {
-                int actionPoints = 0;
-                if (testSquare.Orientation != fromDirection) {
-                    actionPoints += currentMover.MovesPerRotation;
-                } else {
-                    actionPoints += currentMover.MovesPerStep;
-                }
-                int newDistance = distanceDict[fromOrientedSquare] + actionPoints;
+                int actionPointsDistance = actionPointsCostToOrientedNeighbour(testSquare,fromDirection,currentMover);
+                int newDistance = distanceDict[fromOrientedSquare] + actionPointsDistance;
                 if (newDistance < distanceDict[testSquare])
                 {
                     distanceDict[testSquare] = newDistance;
@@ -622,31 +468,7 @@ public class Game : MonoBehaviour
                 }
                 if (!visitedSquares.Contains(testSquare))
                 {
-                    float xToMove = goalSquare.x - testSquare.Position.x;
-                    float yToMove = goalSquare.y - testSquare.Position.y;
-                    int minimumRotations = 0;
-                    List<Direction> directionList = new List<Direction>();
-                    if (xToMove < 0) {
-                        directionList.Add(Direction.Left);
-                    } else if (xToMove > 0) {
-                        directionList.Add(Direction.Right);
-                    }
-                    if (yToMove < 0) {
-                        directionList.Add(Direction.Down);
-                    } else if (yToMove > 0) {
-                        directionList.Add(Direction.Up);
-                    }
-                    foreach (Direction myDirection in directionList) {
-                        int tempNumberTurns = Support.MinimumTurns(currentMover.Orientation(),myDirection);
-                        if (tempNumberTurns > minimumRotations) {
-                            minimumRotations = tempNumberTurns;
-                        }
-                    }
-                    if (minimumRotations > 2) {
-                        print("ERROR, SHOULD NOT HAVE MORE THAN 2 MINIMUM ROTATIONS");
-                    }
-                    float heuristicDistance = (Mathf.Abs(xToMove) + Mathf.Abs(yToMove)) * currentMover.MovesPerStep + 
-                                                                                                      minimumRotations*currentMover.MovesPerRotation;
+                    float heuristicDistance = heuristicDistanceStartToGoal(testSquare.Position,goalSquare,currentMover);
                     myQueue.Enqueue(testSquare, distanceDict[testSquare] + heuristicDistance);
                 }
                 //print("Test square is: " + testSquare.Position);
@@ -656,26 +478,13 @@ public class Game : MonoBehaviour
                     isSolved = true;
                 }
 
-                if (!(drawnSquares.Contains(testSquare.Position))) {
-                    drawnSquares.Add(testSquare.Position);
-                    GameObject marker = Instantiate<GameObject>(trianglePrefab, new Vector3(0, 0, 0), Quaternion.identity);
-
-                    float colorNumber = checkCount / (totalDistanceApproximate * 8);
-                    if (colorNumber > 1.0f)
-                    {
-                        colorNumber = 1.0f;
-                    }
-                    Color myColor = new Color(colorNumber, 0, 0, 1f);
-                    marker.GetComponent<SpriteRenderer>().material.color = myColor;
-                    myView.MoveGameObjectToIndex(marker, testSquare.Position);
+                if (!(squaresToDraw.Contains(testSquare.Position))) {
+                    squaresToDraw.Add(testSquare.Position);
                 }
             }
         }
-        print("Number of checks is: " + checkCount);
-        //GameObject[] GOArray = GameObject.FindGameObjectsWithTag("pathMarker");
-        //foreach (GameObject item in GOArray) {
-        //    Destroy(item);
-        //}
+        print(string.Format("Number of oriented squares examined was {0}.", checkCount));
+        DrawPathing(squaresToDraw);
         if (!isSolved)
         {
             print("No pathing solution found.");
@@ -710,24 +519,74 @@ public class Game : MonoBehaviour
                 currentSquare = previousDict[currentSquare];
             }
             squareList.Reverse();
-            //print("List of tiles is: ");
-            //foreach (Vector2 square in squareList)
-            //{
-            //    print(square);
-            //}
+            foreach (Vector2 square in squareList)
+            {
+                GameObject myCircleMarker = Instantiate<GameObject>(circlePathMarkerPrefab,new Vector3(0,0,0),Quaternion.identity);
+                myView.MoveGameObjectToIndex(myCircleMarker,square);
+            }
             return squareList;
         }
     }
 
-    private List<Direction> directionListFromSquareList(List<Vector2> squareList) {
-        List<Direction> resultList = new List<Direction>();
-        int currentIndex = squareList.Count-1;
-        while (currentIndex > 0) {
-            Direction directionBetween = Support.DirectionForIndexVector(squareList[currentIndex-1]-squareList[currentIndex]);
-            resultList.Add(directionBetween);
-            currentIndex -= 1;
+    private void DrawPathing(List<Vector2> visitedSquares) {
+        for (int i = 0; i < visitedSquares.Count(); i++) {
+            var square = visitedSquares[i];
+            GameObject trianglePrefab = Resources.Load(@"prefabs/pathMarkers/triangleExploredSquares") as GameObject;
+            GameObject marker = Instantiate<GameObject>(trianglePrefab, new Vector3(0, 0, 0), Quaternion.identity);
+            float colorNumber = i / (float)visitedSquares.Count();
+            Color myColor = new Color(colorNumber, 0, 0, 1f);
+            marker.GetComponent<SpriteRenderer>().material.color = myColor;
+            myView.MoveGameObjectToIndex(marker, square);
         }
-        return resultList;
+    }
+
+    private int actionPointsCostToOrientedNeighbour(OrientedSquare testSquare, Direction fromDirection, Mover currentMover) {
+        if (testSquare.Orientation != fromDirection)
+        {
+            return currentMover.MovesPerRotation;
+        }
+        else
+        {
+            return currentMover.MovesPerStep;
+        }
+    }
+
+    private float heuristicDistanceStartToGoal(Vector2 testSquare, Vector2 goalSquare, Mover currentMover) {
+        float xToMove = goalSquare.x - testSquare.x;
+        float yToMove = goalSquare.y - testSquare.y;
+        int minimumRotations = 0;
+        List<Direction> directionList = new List<Direction>();
+        if (xToMove < 0)
+        {
+            directionList.Add(Direction.Left);
+        }
+        else if (xToMove > 0)
+        {
+            directionList.Add(Direction.Right);
+        }
+        if (yToMove < 0)
+        {
+            directionList.Add(Direction.Down);
+        }
+        else if (yToMove > 0)
+        {
+            directionList.Add(Direction.Up);
+        }
+        foreach (Direction myDirection in directionList)
+        {
+            int tempNumberTurns = Support.MinimumTurns(currentMover.Orientation, myDirection);
+            if (tempNumberTurns > minimumRotations)
+            {
+                minimumRotations = tempNumberTurns;
+            }
+        }
+        if (minimumRotations > 2)
+        {
+            throw new System.Exception("Should not be here, minimum rotations is more than 2.");
+        }
+        float heuristicDistance = (Mathf.Abs(xToMove) + Mathf.Abs(yToMove)) * currentMover.MovesPerStep +
+                                                                                          minimumRotations * currentMover.MovesPerRotation;
+        return heuristicDistance;
     }
 
     #endregion
