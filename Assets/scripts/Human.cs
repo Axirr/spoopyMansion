@@ -15,7 +15,7 @@ public class Human : Mover
     public void InitHuman() {
         base.Init(HUMANMOVESPERTURN);
         visionShape = new bool[,] {{true,true,true},
-                                    {false,true,false}};
+                                    {true,true,true}};
         visionShape = Support.TransposeBoolArray(visionShape);
     }
 

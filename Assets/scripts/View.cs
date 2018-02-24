@@ -8,8 +8,6 @@ public class View : MonoBehaviour {
     float horizontalDrawOffset;
     float verticalDrawOffset;
     GameObject[,] gameObjectMap;
-    bool[,] boolExploredMap;
-    Tiles[,] tilesMap;
     float desaturationRatio = 0.5f;
 
 
@@ -30,15 +28,8 @@ public class View : MonoBehaviour {
         int height = myMap.GetLength(1);
         horizontalDrawOffset = -width / 2.0f + 0.5f;
         verticalDrawOffset = -height / 2.0f + 0.5f;
-        tilesMap = myMap;
         gameObjectMap = new GameObject[width,height];
-        boolExploredMap = new bool[height, width];
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                boolExploredMap[i, j] = false;
-            }
-        }
-        this.InitialDrawMap();
+        this.InitialDrawMap(myMap);
     }
 
     #region GameObject current position and moving functions
@@ -84,22 +75,25 @@ public class View : MonoBehaviour {
     /// Draws the map. Starts drawing from the upper left corner of the grid
     /// </summary>
     /// <param name="myMap">My map.</param>
-    private void InitialDrawMap()
+    private void InitialDrawMap(Tiles[,] myMap)
     {
-        for (int i = 0; i < tilesMap.GetLength(0); i++)
+        for (int i = 0; i < myMap.GetLength(0); i++)
         {
-            for (int j = 0; j < tilesMap.GetLength(1); j++)
+            for (int j = 0; j < myMap.GetLength(1); j++)
             {
                 Vector3 worldLocation = new Vector3(horizontalDrawOffset + i, verticalDrawOffset + j, -Camera.main.transform.position.z);
-                Tiles tileType = tilesMap[i, j];
-                if (tileType != Tiles.Wall && tileType != Tiles.Door) {
-                    tileType = Tiles.Unknown;
-                } else if (tileType == Tiles.Door) {
-                    tileType = Tiles.Wall;
+                Tiles actualTileType = (Tiles)(int)myMap[i, j];
+                Tiles displayedTileType = myMap[i, j];
+                if (actualTileType != Tiles.Wall && actualTileType != Tiles.Door) {
+                    displayedTileType = Tiles.Unknown;
+                } else if (actualTileType == Tiles.Door) {
+                    displayedTileType = Tiles.Wall;
                 }
-                GameObject newTile = Instantiate<GameObject>(tilePrefabsDict[tileType], worldLocation, Quaternion.identity);
+                GameObject newTile = Instantiate<GameObject>(tilePrefabsDict[displayedTileType], worldLocation, Quaternion.identity);
+                TileInfo tileInfo = newTile.GetComponent<TileInfo>();
+                tileInfo.Initialize(actualTileType,displayedTileType,false);
                 gameObjectMap[i, j] = newTile;
-                if (tileType != Tiles.Unknown)
+                if (displayedTileType != Tiles.Unknown)
                 {
                     ChangeTileSaturation(newTile, false);
                 }                
@@ -108,22 +102,24 @@ public class View : MonoBehaviour {
     }
 
     private void UpdateTile(Vector2 tilePosition, bool newVisibility) {
-        bool currentExploredStatus = boolExploredMap[(int)tilePosition.x, (int)tilePosition.y];
         int tileX = (int)tilePosition.x;
         int tileY = (int)tilePosition.y;
-        GameObject newTile = gameObjectMap[tileX,tileY];
+        GameObject tileGameObject = gameObjectMap[tileX, tileY];
+        TileInfo tileInfo = tileGameObject.GetComponent<TileInfo>();
+        bool currentExploredStatus = tileInfo.Explored;
         if (!currentExploredStatus) {
-            boolExploredMap[tileX, tileY] = true;
-            Tiles tileType = tilesMap[tileX, tileY];
-            Destroy(gameObjectMap[tileX,tileY]);
-            newTile = Instantiate<GameObject>(tilePrefabsDict[tileType], this.IndicesToMapCoordinates(tilePosition), Quaternion.identity);
+            Tiles tileType = tileInfo.ActualTileType;
+            Destroy(tileGameObject);
+            GameObject newTile = Instantiate<GameObject>(tilePrefabsDict[tileType], this.IndicesToMapCoordinates(tilePosition), Quaternion.identity);
+            newTile.GetComponent<TileInfo>().Initialize(tileType, tileType, true);
             ChangeTileSaturation(newTile, false);
             gameObjectMap[tileX, tileY] = newTile;
+            tileGameObject = newTile;
         }
         if (newVisibility) {
-            ChangeTileSaturation(newTile,true);
+            ChangeTileSaturation(tileGameObject,true);
         } else {
-            ChangeTileSaturation(newTile, false);
+            ChangeTileSaturation(tileGameObject, false);
         }
     }
 
