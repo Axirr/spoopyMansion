@@ -45,3 +45,12 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Tile
+    uniqueID: 3548028289
+    locked: 0
+  - name: Character
+    uniqueID: 2518001651
+    locked: 0
+  - name: PathMarker
+    uniqueID: 3286426609
+    locked: 0

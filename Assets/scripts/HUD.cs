@@ -8,8 +8,15 @@ public class HUD : MonoBehaviour {
     [SerializeField]
     Text currentActionPoints;
 
+    [SerializeField]
+    Text roundsBeatenText;
+
     public void SetCurrentActionPoints(int points) {
         currentActionPoints.text = "Action Points Left: " + points;
+    }
+
+    public void SetRoundsBeaten(int roundsBeaten) {
+        roundsBeatenText.text = string.Format("Rounds Beaten: {0}",roundsBeaten);
     }
 
 	// Use this for initialization

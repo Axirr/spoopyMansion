@@ -11,7 +11,7 @@ public class Mover : MonoBehaviour {
     int remainingMovesPerTurn;
     Direction orientation;
     int stepMoves = 2;
-    int turnMoves = 1;
+    int turnMoves = 0;
     int attackMoves = 0;
 
 
@@ -28,6 +28,10 @@ public class Mover : MonoBehaviour {
     public Direction Orientation
     {
         get { return this.orientation; }
+    }
+
+    public Vector2 Position {
+        get { return Camera.main.GetComponent<View>().GameObjectCurrentIndexPosition(gameObject); }
     }
 
     public int MovesPerStep {
@@ -72,13 +76,13 @@ public class Mover : MonoBehaviour {
 
     #region Movement methods
 
-    public void MoveTo(Vector2 indexPosition) {
+    public virtual void MoveTo(Vector2 indexPosition) {
         View myView = Camera.main.GetComponent<View>();
         myView.MoveGameObjectToIndex(gameObject,indexPosition);
         this.ReduceMovesBy(stepMoves);
     }
 
-    public void Rotate(Direction direction) {
+    public virtual void Rotate(Direction direction) {
         View myView = Camera.main.GetComponent<View>();
         Direction currentObjectOrientation = this.orientation;
         Direction directionToAssign = Direction.Down;

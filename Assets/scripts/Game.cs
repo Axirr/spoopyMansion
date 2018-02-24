@@ -10,6 +10,7 @@ public class Game : MonoBehaviour
 
     // Program mode flags
     bool runUnitTests = false;
+    bool visiblePathing = false;
 
     // Information about the current map
     Tiles[,] currentMap;
@@ -20,11 +21,11 @@ public class Game : MonoBehaviour
 
     // Information about the active character and turn order
     GameObject currentCharacter;
-    List<GameObject> characterTurnOrderList = new List<GameObject>();
+    public List<GameObject> characterTurnOrderList = new List<GameObject>();
 
     // Time variables for input delay
     const float MovementInputDelay = 0.2f;
-    const float ZombieMovementInputDelay = 0.5f;
+    const float ZombieMovementInputDelay = 0.0f;
     float timeSinceLastInputMove = 0.0f;
     const int zombiesPerRoom = 1;
 
@@ -87,6 +88,7 @@ public class Game : MonoBehaviour
         if (currentMover is Human && 
             currentMap[(int)currentPlayerIndexPosition.x, (int)currentPlayerIndexPosition.y] == Tiles.Door) {
             roundsBeaten += 1;
+            hud.SetRoundsBeaten(roundsBeaten);
             print(string.Format("The number of rounds beaten is: {0}", roundsBeaten));
             ResetMapToRandom();
             CreateHumanAndZombies(zombiesPerRoom);
@@ -126,7 +128,7 @@ public class Game : MonoBehaviour
         currentMap = myMap;
         mapHorizontalWidth = myMap.GetLength(0);
         mapVeticalWidth = myMap.GetLength(1);
-        myView.UpdateMapOffsets(mapHorizontalWidth,mapVeticalWidth);
+        myView.SetNewMap(myMap);
     }
 
     public void ResetMap(Tiles[,] mansionMap)
@@ -135,7 +137,6 @@ public class Game : MonoBehaviour
         Support.DestroyAllWithTag(Support.MOVER_TAG);
         Support.DestroyAllWithTag(Support.MARKER_TAG);
         SetMap(mansionMap);
-        myView.DrawMap(mansionMap);
         characterTurnOrderList = new List<GameObject>();
     }
 
@@ -168,6 +169,7 @@ public class Game : MonoBehaviour
             currentCharacter = newCharacter;
         } else if (myMover is Zombie) {
             (myMover as Zombie).InitZombie();
+            newCharacter.GetComponent<SpriteRenderer>().enabled = false;
         }
         characterTurnOrderList.Add(newCharacter);
     }
@@ -178,6 +180,11 @@ public class Game : MonoBehaviour
             CreateCharacter(MoverType.Zombie,ValidRandomIndexFloorPosition());
         }
         hud.SetCurrentActionPoints(currentCharacter.GetComponent<Mover>().RemainingMoves);
+        Human humanMover = currentCharacter.GetComponent<Mover>() as Human;
+        List<Vector2> currentVision = VisionForSpaceWithShape(humanMover.Position,
+                                                              humanMover.Orientation,
+                                                              humanMover.VisionShape);
+        myView.UpdateMap(new List<Vector2>(),currentVision);
     }
 
 
@@ -331,6 +338,7 @@ public class Game : MonoBehaviour
                 }
                 else if (pathToHuman.Count == 2)
                 {
+                    currentCharacter.GetComponent<SpriteRenderer>().enabled = true;
                     Destroy(characterTurnOrderList[0]);
                     characterTurnOrderList = new List<GameObject>();
                 }
@@ -338,6 +346,13 @@ public class Game : MonoBehaviour
                 {
                     Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(directionToMove);
                     mover.MoveTo(newLocation);
+                    Human humanMover = characterTurnOrderList[0].GetComponent<Mover>() as Human;
+                    List<Vector2> humanVisionCone = VisionForSpaceWithShape(humanMover.Position,
+                                                                            humanMover.Orientation,
+                                                                            humanMover.VisionShape);
+                    if (!humanVisionCone.Contains(mover.Position)) {
+                        currentCharacter.GetComponent<SpriteRenderer>().enabled = false;
+                    }
                 }
             }
         }
@@ -484,7 +499,9 @@ public class Game : MonoBehaviour
             }
         }
         print(string.Format("Number of oriented squares examined was {0}.", checkCount));
-        DrawPathing(squaresToDraw);
+        if (visiblePathing) {
+            DrawPathing(squaresToDraw);
+        }
         if (!isSolved)
         {
             print("No pathing solution found.");
@@ -519,10 +536,12 @@ public class Game : MonoBehaviour
                 currentSquare = previousDict[currentSquare];
             }
             squareList.Reverse();
-            foreach (Vector2 square in squareList)
-            {
-                GameObject myCircleMarker = Instantiate<GameObject>(circlePathMarkerPrefab,new Vector3(0,0,0),Quaternion.identity);
-                myView.MoveGameObjectToIndex(myCircleMarker,square);
+            if (visiblePathing) {
+                foreach (Vector2 square in squareList)
+                {
+                    GameObject myCircleMarker = Instantiate<GameObject>(circlePathMarkerPrefab, new Vector3(0, 0, 0), Quaternion.identity);
+                    myView.MoveGameObjectToIndex(myCircleMarker, square);
+                }
             }
             return squareList;
         }
@@ -587,6 +606,52 @@ public class Game : MonoBehaviour
         float heuristicDistance = (Mathf.Abs(xToMove) + Mathf.Abs(yToMove)) * currentMover.MovesPerStep +
                                                                                           minimumRotations * currentMover.MovesPerRotation;
         return heuristicDistance;
+    }
+
+    public List<Vector2> VisionForSpaceWithShape(Vector2 location, Direction orientation,bool[,] visionShape) {
+        List<Vector2> visibleSquares = new List<Vector2>() { location };
+
+
+        int xSignModifier = 1;
+        int ySignModifier = 1;
+        bool isWidthOffset = true;
+        bool[,] transposedArray = Support.TransposeBoolArray(visionShape);
+        bool[,] arrayToWorkWith = visionShape;
+        switch (orientation) {
+            case Direction.Down:
+                ySignModifier = -1;
+                break;
+            case Direction.Left:
+                arrayToWorkWith = transposedArray;
+                xSignModifier = -1;
+                isWidthOffset = false;
+                break;
+            case Direction.Right:
+                arrayToWorkWith = transposedArray;
+                isWidthOffset = false;
+                break;
+            default:
+                break;
+        }
+        int width = arrayToWorkWith.GetLength(0);
+        int height = arrayToWorkWith.GetLength(1);
+        int widthOffset = -width/2;
+        int heightOffset = -height/2;
+        if (isWidthOffset) {
+            heightOffset = 1;
+        } else {
+            widthOffset = 1;
+        }
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                Vector2 testIndex = new Vector2(i*xSignModifier + widthOffset*xSignModifier, j*ySignModifier+heightOffset*ySignModifier) + location;
+                if (IsIndexPositionWithinMap(testIndex) && arrayToWorkWith[i,j] == true) {
+                    visibleSquares.Add(testIndex);
+                }
+            }
+        }
+        return visibleSquares;
     }
 
     #endregion

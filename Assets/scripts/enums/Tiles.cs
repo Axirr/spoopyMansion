@@ -7,5 +7,6 @@ public enum Tiles
     Door,
     Floor,
     Obstacle,
-    Wall
+    Wall, 
+    Unknown
 }

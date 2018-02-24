@@ -27,6 +27,18 @@ public class Support : MonoBehaviour
         return tempArray;
     }
 
+    public static bool[,] TransposeBoolArray(bool[,] boolArray) {
+        bool[,] tempArray = new bool[boolArray.GetLength(1), boolArray.GetLength(0)];
+        for (int i = 0; i < boolArray.GetLength(0); i++)
+        {
+            for (int j = 0; j < boolArray.GetLength(1); j++)
+            {
+                tempArray[j, i] = boolArray[boolArray.GetLength(0) - 1 - i, j];
+            }
+        }
+        return tempArray;
+    }
+
     public static void DestroyAllWithTag(string myTag) {
         GameObject[] gameObjectsToDelete = GameObject.FindGameObjectsWithTag(myTag);
         foreach (GameObject myGameObject in gameObjectsToDelete) {
