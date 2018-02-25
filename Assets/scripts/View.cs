@@ -84,16 +84,14 @@ public class View : MonoBehaviour {
                 Vector3 worldLocation = new Vector3(horizontalDrawOffset + i, verticalDrawOffset + j, -Camera.main.transform.position.z);
                 Tiles actualTileType = (Tiles)(int)myMap[i, j];
                 Tiles displayedTileType = myMap[i, j];
-                if (actualTileType != Tiles.Wall && actualTileType != Tiles.Door) {
+                if (Support.isFogOfWar) {
                     displayedTileType = Tiles.Unknown;
-                } else if (actualTileType == Tiles.Door) {
-                    displayedTileType = Tiles.Wall;
                 }
                 GameObject newTile = Instantiate<GameObject>(tilePrefabsDict[displayedTileType], worldLocation, Quaternion.identity);
                 TileInfo tileInfo = newTile.GetComponent<TileInfo>();
                 tileInfo.Initialize(actualTileType,displayedTileType,false);
                 gameObjectMap[i, j] = newTile;
-                if (displayedTileType != Tiles.Unknown)
+                if (Support.isFogOfWar && displayedTileType != Tiles.Unknown)
                 {
                     ChangeTileSaturation(newTile, false);
                 }                
@@ -124,6 +122,9 @@ public class View : MonoBehaviour {
     }
 
     public void UpdateMap(List<Vector2> previousVision, List<Vector2> newVision) {
+        if (!Support.isFogOfWar) {
+            return;
+        }
         List<Vector2> goneSquares = previousVision.Except(newVision).ToList();
         List<Vector2> newSquares  = newVision.Except(previousVision).ToList();
         List<GameObject> zombies = (from charc in Camera.main.GetComponent<Game>().characterTurnOrderList

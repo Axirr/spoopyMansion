@@ -6,10 +6,10 @@ using UnityEngine.UI;
 public class HUD : MonoBehaviour {
 
     [SerializeField]
-    Text currentActionPoints;
+    Text currentActionPoints = null;
 
     [SerializeField]
-    Text roundsBeatenText;
+    Text roundsBeatenText = null;
 
     public void SetCurrentActionPoints(int points) {
         currentActionPoints.text = "Action Points Left: " + points;

@@ -13,6 +13,7 @@ public class Mover : MonoBehaviour {
     int stepMoves = 2;
     int turnMoves = 0;
     int attackMoves = 0;
+    List<Tiles> impassableTiles = Support.PROHIBITED_TILES_NONHUMAN;
 
 
     #endregion
@@ -46,16 +47,22 @@ public class Mover : MonoBehaviour {
         get { return this.attackMoves; }
     }
 
+    public List<Tiles> ImpassableTiles {
+        get { return this.impassableTiles; }
+        set { this.impassableTiles = value; }
+    }
+
     #endregion
 
 
 
     #region Methods
 
-    protected void Init(int movesPerTurn) {
+    protected void Init(int movesPerTurn, List<Tiles> impassableTiles) {
         this.totalMovesPerTurn = movesPerTurn;
         this.remainingMovesPerTurn = totalMovesPerTurn;
         this.orientation = Direction.Right;
+        this.impassableTiles = impassableTiles;
     }
 
     public void ResetMoves() {

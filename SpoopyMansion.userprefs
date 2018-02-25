@@ -1,16 +1,16 @@
 ﻿<Properties StartupConfiguration="{B5359262-1222-69D9-0094-80EE155FD32D}|">
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/scripts/View.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/scripts/Game.cs">
     <Files>
-      <File FileName="Assets/scripts/Game.cs" Line="8" Column="2" />
+      <File FileName="Assets/scripts/Game.cs" Line="24" Column="17" />
       <File FileName="Assets/scripts/Support.cs" Line="34" Column="26" />
       <File FileName="Assets/scripts/OrientedSquare.cs" Line="53" Column="6" />
-      <File FileName="Assets/scripts/HUD.cs" Line="13" Column="5" />
-      <File FileName="Assets/scripts/Mover.cs" Line="12" Column="27" />
-      <File FileName="Assets/scripts/Human.cs" Line="8" Column="36" />
+      <File FileName="Assets/scripts/View.cs" Line="1" Column="1" />
+      <File FileName="Assets/scripts/HUD.cs" Line="19" Column="2" />
+      <File FileName="Assets/scripts/Mover.cs" Line="14" Column="22" />
+      <File FileName="Assets/scripts/Human.cs" Line="1" Column="1" />
       <File FileName="Assets/scripts/UnitTests.cs" Line="97" Column="24" />
-      <File FileName="Assets/scripts/Zombie.cs" Line="10" Column="6" />
-      <File FileName="Assets/scripts/TileInfo.cs" Line="7" Column="27" />
-      <File FileName="Assets/scripts/View.cs" Line="91" Column="33" />
+      <File FileName="Assets/scripts/Zombie.cs" Line="1" Column="1" />
+      <File FileName="Assets/scripts/TileInfo.cs" Line="18" Column="5" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4468955737788600}
   - component: {fileID: 212936491855672286}
+  - component: {fileID: 114482963805596044}
   m_Layer: 0
   m_Name: Floor
   m_TagString: map
@@ -40,6 +41,17 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114482963805596044
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1794226058719966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 816dc4e8571cc4e6fa6351d49e389e3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &212936491855672286
 SpriteRenderer:
   m_ObjectHideFlags: 1

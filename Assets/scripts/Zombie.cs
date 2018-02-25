@@ -8,6 +8,6 @@ public class Zombie : Mover {
 
     public void InitZombie()
     {
-        base.Init(ZOMBIEMOVESPERTURN);
+        base.Init(ZOMBIEMOVESPERTURN, Support.PROHIBITED_TILES_NONHUMAN);
     }
 }

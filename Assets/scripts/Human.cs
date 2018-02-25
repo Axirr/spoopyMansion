@@ -13,7 +13,7 @@ public class Human : Mover
     }
 
     public void InitHuman() {
-        base.Init(HUMANMOVESPERTURN);
+        base.Init(HUMANMOVESPERTURN, Support.PROHIBITED_TILES_HUMAN);
         visionShape = new bool[,] {{true,true,true},
                                     {true,true,true}};
         visionShape = Support.TransposeBoolArray(visionShape);

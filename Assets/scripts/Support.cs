@@ -16,6 +16,7 @@ public class Support : MonoBehaviour
     public const int MOVES_PER_Rotation = 1;
     public static List<Tiles> PROHIBITED_TILES_HUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall };
     public static List<Tiles> PROHIBITED_TILES_NONHUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall, Tiles.Door };
+    public static bool isFogOfWar = true;
 
     public static Tiles[,] ReverseMap(Tiles[,] myMap) {
         Tiles[,] tempArray = new Tiles[myMap.GetLength(1), myMap.GetLength(0)];
@@ -56,11 +57,12 @@ public class Support : MonoBehaviour
 
     public static Tiles[,] GenerateMap(int xLength, int yLength)
     {
+        Tiles[,] returnMap = new Tiles[xLength, yLength];
         int tileSelector;
         Tiles tileType;
-        Tiles[,] returnMap = new Tiles[xLength, yLength];
         // Populate the walls
-        for (int i = 0; i < xLength; i++) {
+        for (int i = 0; i < xLength; i++)
+        {
             returnMap[i, 0] = Tiles.Wall;
             returnMap[i, yLength - 1] = Tiles.Wall;
         }
@@ -72,11 +74,17 @@ public class Support : MonoBehaviour
 
 
         // Populate the floor
-        for (int i = 1; i < xLength -1; i++) {
-            for (int j = 1; j < yLength - 1; j++) {
+        for (int i = 1; i < xLength - 1; i++)
+        {
+            for (int j = 1; j < yLength - 1; j++)
+            {
                 tileSelector = Random.Range(0, 11);
-                switch (tileSelector) {
-                    //case 8:
+                switch (tileSelector)
+                {
+                    //case 5:
+                    //case 6:
+                    //case 7:
+                    case 8:
                     case 9:
                     case 10:
                         tileType = Tiles.Obstacle;
@@ -84,7 +92,7 @@ public class Support : MonoBehaviour
                     default:
                         tileType = Tiles.Floor;
                         break;
-                        
+
                 }
                 returnMap[i, j] = tileType;
             }
@@ -94,21 +102,22 @@ public class Support : MonoBehaviour
         Direction direction = (Direction)Random.Range(0, 4);
         int doorX = 0;
         int doorY = 0;
-        switch (direction) {
+        switch (direction)
+        {
             case Direction.Up:
                 doorY = yLength - 1;
-                doorX = Random.Range(1, xLength-1);
+                doorX = Random.Range(1, xLength - 1);
                 break;
             case Direction.Down:
                 doorY = 0;
-                doorX = Random.Range(1, xLength-1);
+                doorX = Random.Range(1, xLength - 1);
                 break;
             case Direction.Left:
-                doorY = Random.Range(1, yLength-1);
+                doorY = Random.Range(1, yLength - 1);
                 doorX = 0;
                 break;
             case Direction.Right:
-                doorY = Random.Range(1, yLength-1);
+                doorY = Random.Range(1, yLength - 1);
                 doorX = xLength - 1;
                 break;
             default:

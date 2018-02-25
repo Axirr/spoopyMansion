@@ -20,6 +20,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4816948852399040}
   - component: {fileID: 212619689736724474}
+  - component: {fileID: 114105618447816750}
   m_Layer: 0
   m_Name: Wall
   m_TagString: map
@@ -40,6 +41,17 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &114105618447816750
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1348681998870558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 816dc4e8571cc4e6fa6351d49e389e3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!212 &212619689736724474
 SpriteRenderer:
   m_ObjectHideFlags: 1
