@@ -61,7 +61,6 @@ public class View : MonoBehaviour {
         Direction currentDirection = myMover.Orientation;
         int numberOfRightTurns = Support.NumberOfRightTurns(currentDirection,newDirection);
         int numberOfLeftTurns = 4 - numberOfRightTurns;
-        print("Number of right turns is: " + numberOfRightTurns);
         int newZ = (int)((myGameObject.transform.eulerAngles.z + numberOfLeftTurns * 90) % 360);
         myGameObject.transform.eulerAngles = new Vector3(0, 0, newZ);
     }

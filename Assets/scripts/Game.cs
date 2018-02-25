@@ -127,55 +127,12 @@ public class Game : MonoBehaviour
         myView.SetNewMap(myMap);
     }
 
-    public bool ResetMap(Tiles[,] mansionMap)
+    public void ResetMap(Tiles[,] mansionMap)
     {
-        bool wasSuccesful = true;
         Support.DestroyAllWithTag(Support.MAP_TAG);
         Support.DestroyAllWithTag(Support.MOVER_TAG);
         Support.DestroyAllWithTag(Support.MARKER_TAG);
         SetMap(mansionMap);
-        characterTurnOrderList = new List<GameObject>();
-        CreateHumanAndZombies(zombiesPerRoom);
-        Vector2 goalSquare = new Vector2(-1, -1);
-        for (int i = 0; i < currentMap.GetLength(0); i++)
-        {
-            for (int j = 0; j < currentMap.GetLength(1); j++)
-            {
-                if (currentMap[i, j] == Tiles.Door)
-                {
-                    goalSquare = new Vector2(i, j);
-                }
-            }
-        }
-        if (goalSquare == new Vector2(-1, -1))
-        {
-            wasSuccesful = false;
-        }
-        Human currentHuman = characterTurnOrderList[0].GetComponent<Mover>() as Human;
-        List<Vector2> humanPath = this.ShortestPath(goalSquare, currentHuman.Position, currentHuman);
-        if (!humanPath.Any())
-        {
-            wasSuccesful = false;
-            return wasSuccesful;
-        }
-        List<GameObject> zombiesList = characterTurnOrderList.Skip(1).ToList();
-        for (int i = 0; i < zombiesList.Count; i++)
-        {
-            Zombie testZombie = zombiesList[i].GetComponent<Mover>() as Zombie;
-            float heuristicToDoor = heuristicDistanceStartToGoal(goalSquare,testZombie.Position,testZombie);
-            float heuristicToHuman = heuristicDistanceStartToGoal(currentHuman.Position, testZombie.Position, testZombie);
-            Vector2 goalSquareForZombie = currentHuman.Position;
-            if (heuristicToDoor < heuristicToHuman) {
-                goalSquareForZombie = goalSquare;
-            }
-            List<Vector2> zombiePath = this.ShortestPath(goalSquareForZombie, testZombie.Position, testZombie);
-            if (!zombiePath.Any())
-            {
-                wasSuccesful = false;
-                break;
-            }
-        }
-        return wasSuccesful;
     }
 
     private void ResetMapToRandom()
@@ -183,11 +140,68 @@ public class Game : MonoBehaviour
         bool wasSuccessful = false;
         int attemptCount = 0;
         while (!wasSuccessful && attemptCount < maxMapGenerationAttempts) {
-            Tiles[,] myMap = Support.GenerateRandomMap();
             attemptCount += 1;
-            wasSuccessful = ResetMap(myMap);
+            Tiles[,] myMap = Support.GenerateRandomMap();
+            this.SetMap(myMap);
+            List<Vector2> spawnIndexList = new List<Vector2>();
+            for (int i = 0; i < (zombiesPerRoom + 1); i++)
+            {
+                spawnIndexList.Add(ValidRandomIndexFloorPosition(currentMap,spawnIndexList));
+            }
+            if (IsMapValid(currentMap,spawnIndexList)) {
+                wasSuccessful = true;
+                ResetMap(myMap);
+                CreateHumanAndZombies(spawnIndexList);
+            }
         }
         print("Number of map generation attempts was: " + attemptCount);
+    }
+
+    private bool IsMapValid(Tiles[,] myMap, List<Vector2> spawnLocations) {
+        bool isValid = true;
+        Vector2 goalSquare = new Vector2(-1, -1);
+        for (int i = 0; i < myMap.GetLength(0); i++)
+        {
+            for (int j = 0; j < myMap.GetLength(1); j++)
+            {
+                if (myMap[i, j] == Tiles.Door)
+                {
+                    goalSquare = new Vector2(i, j);
+                }
+            }
+        }
+        if (goalSquare == new Vector2(-1, -1))
+        {
+            isValid = false;
+            return isValid;
+        }
+        CreateHumanAndZombies(spawnLocations);
+        Human testHuman = currentCharacter.GetComponent<Mover>() as Human;
+        List<Vector2> humanPath = this.ShortestPath(goalSquare, testHuman.Position, testHuman);
+        if (!humanPath.Any())
+        {
+            isValid = false;
+            return isValid;
+        }
+        List<GameObject> zombiesList = characterTurnOrderList.Skip(1).ToList();
+        for (int i = 0; i < zombiesList.Count; i++)
+        {
+            Zombie testZombie = zombiesList[i].GetComponent<Mover>() as Zombie;
+            float heuristicToDoor = heuristicDistanceStartToGoal(goalSquare, testZombie.Position, testZombie);
+            float heuristicToHuman = heuristicDistanceStartToGoal(testHuman.Position, testZombie.Position, testZombie);
+            Vector2 goalSquareForZombie = testHuman.Position;
+            if (heuristicToDoor < heuristicToHuman)
+            {
+                goalSquareForZombie = goalSquare;
+            }
+            List<Vector2> zombiePath = this.ShortestPath(goalSquareForZombie, testZombie.Position, testZombie);
+            if (!zombiePath.Any())
+            {
+                isValid = false;
+                return isValid;
+            }
+        }
+        return isValid;
     }
 
     private void CreateCharacter(MoverType newMoverType, Vector2 location) {
@@ -220,10 +234,15 @@ public class Game : MonoBehaviour
         characterTurnOrderList.Add(newCharacter);
     }
 
-    public void CreateHumanAndZombies(int numberOfZombies) {
-        CreateCharacter(MoverType.Human,ValidRandomIndexFloorPosition());
-        for (int i = 0; i < numberOfZombies; i++) {
-            CreateCharacter(MoverType.Zombie,ValidRandomIndexFloorPosition());
+    public void CreateHumanAndZombies(List<Vector2> spawnLocations) {
+        Support.DestroyAllWithTag(Support.MOVER_TAG);
+        characterTurnOrderList = new List<GameObject>();
+        for (int i = 0; i < spawnLocations.Count; i++) {
+            if (i == 0) {
+                CreateCharacter(MoverType.Human, spawnLocations[i]);
+            } else {
+                CreateCharacter(MoverType.Zombie, spawnLocations[i]);
+            }
         }
         hud.SetCurrentActionPoints(currentCharacter.GetComponent<Mover>().RemainingMoves);
         Human humanMover = currentCharacter.GetComponent<Mover>() as Human;
@@ -236,25 +255,27 @@ public class Game : MonoBehaviour
 
     // Returns Vector2(-10000,-10000) if no valid location can be found
     // Cannot spawn a character in a door
-    private Vector2 ValidRandomIndexFloorPosition()
+    private Vector2 ValidRandomIndexFloorPosition(Tiles[,] myMap, List<Vector2> characterPositionList)
     {
-        List<Vector2> characterPositionList = GetOccupiedIndexPositionsList();
+        //List<Vector2> characterPositionList = GetOccupiedIndexPositionsList();
         List<int> xInts = new List<int>();
         List<int> yInts = new List<int>();
-        for (int i =  0; i < mapHorizontalWidth; i++) {
+        int myMapWidth = myMap.GetLength(0);
+        int myMapHeight = myMap.GetLength(1);
+        for (int i =  0; i < myMapWidth; i++) {
             xInts.Add(i);
         }
-        for (int j = 0; j < mapVeticalWidth; j++) {
+        for (int j = 0; j < myMapHeight; j++) {
             yInts.Add(j);
         }
         Support.shuffleListOfInt(xInts);
         Support.shuffleListOfInt(yInts);
 
-        for (int i = 0; i < mapHorizontalWidth; i++)
+        for (int i = 0; i < myMapWidth; i++)
         {
-            for (int j = 0; j < mapVeticalWidth; j++)
+            for (int j = 0; j < myMapHeight; j++)
             {
-                if (!Support.PROHIBITED_TILES_NONHUMAN.Contains(currentMap[xInts[i], yInts[j]]))
+                if (!Support.PROHIBITED_TILES_NONHUMAN.Contains(myMap[xInts[i], yInts[j]]))
                 {
                     Vector2 testPosition = new Vector2(xInts[i], yInts[j]);
                     if (characterPositionList.Count == 0)
@@ -264,21 +285,23 @@ public class Game : MonoBehaviour
                     bool canReturn = true;
                     for (int k = 0; k < characterPositionList.Count; k++)
                     {;
-                        if (characterPositionList[k].x == testPosition.x && characterPositionList[k].y == testPosition.y)
+                        if (System.Math.Abs(characterPositionList[k].x - testPosition.x) < 0.1 && System.Math.Abs(characterPositionList[k].y - testPosition.y) < 0.1)
                         {
                             canReturn = false;
                             break;
                         }
 
                     }
-                    if (canReturn) {
+                    if (canReturn)
+                    {
                         return testPosition;
                     }
 
                 }
             }
         }
-        return new Vector2(-10000,-10000);
+        print("ERROR, COULD NOT GENERATE VALID RANDOM SPAWN LOCATION");
+        return new Vector2(-10000, -10000);
     }
 
     #endregion
@@ -408,7 +431,7 @@ public class Game : MonoBehaviour
     {
         Vector2 newLocation = myView.GameObjectCurrentIndexPosition(currentCharacter) + Support.IndexVectorForDirection(direction);
         Direction currentMoverOrientation = mover.Orientation;
-        if (IsIndexSpaceWalkable(newLocation, mover) && currentMoverOrientation == direction && mover.RemainingMoves >= Support.MOVES_PER_STEP)
+        if (IsIndexSpaceWalkable(newLocation, mover.ImpassableTiles) && currentMoverOrientation == direction && mover.RemainingMoves >= Support.MOVES_PER_STEP)
         {
             mover.MoveTo(newLocation);
             return true;
@@ -428,9 +451,8 @@ public class Game : MonoBehaviour
 
     // Checks if the provided location (in index coordinates) is a prohibited tile or is occupied by
     // another character
-    private bool IsIndexSpaceWalkable(Vector2 testSpace, Mover forMover)
+    private bool IsIndexSpaceWalkable(Vector2 testSpace, List<Tiles> impassableTiles)
     {
-        List<Tiles> impassableTiles = forMover.ImpassableTiles;
         Tiles testTile = currentMap[(int)testSpace.x, (int)testSpace.y];
         if (!impassableTiles.Contains(testTile))
         {
@@ -457,17 +479,15 @@ public class Game : MonoBehaviour
 
     private List<Vector2> ShortestPath(Vector2 goalSquare, Vector2 startSquare, Mover currentMover)
     {
-
         Support.DestroyAllWithTag(Support.MARKER_TAG);
-
         Dictionary<OrientedSquare, int> distanceDict = new Dictionary<OrientedSquare, int>();
         const int STARTING_DISTANCE = 1000000;
         Dictionary<OrientedSquare, OrientedSquare> previousDict = new Dictionary<OrientedSquare, OrientedSquare>();
         Vector2 nullVector = new Vector2(-1,-1);
         Direction[] directionArray = { Direction.Up, Direction.Down, Direction.Left, Direction.Right };
-        for (int i = 0; i < mapHorizontalWidth; i++)
+        for (int i = 0; i < currentMap.GetLength(0); i++)
         {
-            for (int j = 0; j < mapVeticalWidth; j++)
+            for (int j = 0; j < currentMap.GetLength(1); j++)
             {
                 foreach (var direction in directionArray) {
                     OrientedSquare createdSquare = new OrientedSquare(new Vector2(i, j),direction);
@@ -506,7 +526,7 @@ public class Game : MonoBehaviour
                 new OrientedSquare(fromSquare, Support.DirectionRotatedLeftRight(fromDirection, Direction.Left))
             };
             Vector2 forwardSquare = fromSquare + Support.IndexVectorForDirection(fromDirection);
-            if (IsIndexSpaceWalkable(forwardSquare, currentMover) || forwardSquare == goalSquare) {
+            if (IsIndexSpaceWalkable(forwardSquare, currentMover.ImpassableTiles) || forwardSquare == goalSquare) {
                 testSquares.Add(new OrientedSquare(forwardSquare, fromDirection));
             }
 
