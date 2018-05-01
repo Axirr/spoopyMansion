@@ -33,6 +33,10 @@ public class Game : MonoBehaviour
     // Game score variables
     int roundsBeaten = 0;
 
+    // Dummy human and zombie for pathing function to get type specific action costs, etc.
+    Human dummyHuman;
+    Zombie dummyZombie;
+
     #endregion
 
 
@@ -44,6 +48,13 @@ public class Game : MonoBehaviour
     {
         myView = Camera.main.GetComponent<View>();
         hud = GameObject.FindWithTag(Support.HUD_TAG).GetComponent<HUD>();
+
+        //Poor workaround for pathing function requiring a mover
+        dummyHuman = GameObject.FindWithTag(Support.HUD_TAG).AddComponent<Human>();
+        dummyHuman.InitHuman(new Vector2(-10, -10));
+        dummyZombie = GameObject.FindWithTag(Support.HUD_TAG).AddComponent<Zombie>();
+        dummyZombie.InitZombie(new Vector2(-11, -11));
+
         myView.Initialize();
         //
         // Check if unit test flag active
@@ -176,26 +187,17 @@ public class Game : MonoBehaviour
             isValid = false;
             return isValid;
         }
-        CreateHumanAndZombies(spawnLocations);
-        Human testHuman = currentCharacter.GetComponent<Mover>() as Human;
-        List<Vector2> humanPath = this.ShortestPath(goalSquare, testHuman.Position, testHuman, currentMap);
+        Vector2 testHumanPosition = spawnLocations[0];
+        List<Vector2> humanPath = this.ShortestPath(goalSquare, testHumanPosition, Direction.Right, dummyHuman, currentMap, spawnLocations);
         if (!humanPath.Any())
         {
             isValid = false;
             return isValid;
         }
-        List<GameObject> zombiesList = characterTurnOrderList.Skip(1).ToList();
-        for (int i = 0; i < zombiesList.Count; i++)
+        for (int i = 1; i < spawnLocations.Count; i++)
         {
-            Zombie testZombie = zombiesList[i].GetComponent<Mover>() as Zombie;
-            float heuristicToDoor = heuristicDistanceStartToGoal(goalSquare, testZombie.Position, testZombie);
-            float heuristicToHuman = heuristicDistanceStartToGoal(testHuman.Position, testZombie.Position, testZombie);
-            Vector2 goalSquareForZombie = testHuman.Position;
-            if (heuristicToDoor < heuristicToHuman)
-            {
-                goalSquareForZombie = goalSquare;
-            }
-            List<Vector2> zombiePath = this.ShortestPath(goalSquareForZombie, testZombie.Position, testZombie, currentMap);
+            Vector2 testZombiePosition = spawnLocations[i];
+            List<Vector2> zombiePath = this.ShortestPath(testHumanPosition, testZombiePosition, Direction.Right, dummyZombie, currentMap, spawnLocations);
             if (!zombiePath.Any())
             {
                 isValid = false;
@@ -371,7 +373,7 @@ public class Game : MonoBehaviour
             timeSinceLastInputMove = 0.0f;
         }
         Vector2 humanPosition = myView.GameObjectCurrentIndexPosition(characterTurnOrderList[0]);
-        List<Vector2> pathToHuman = ShortestPath(humanPosition, mover.Position,mover, currentMap);
+        List<Vector2> pathToHuman = ShortestPath(humanPosition, mover.Position, mover.Orientation, mover, currentMap, GetOccupiedIndexPositionsList());
         if (pathToHuman.Count == 0)
         {
             mover.SetMovesToZero();
@@ -483,7 +485,7 @@ public class Game : MonoBehaviour
         return returnList;
     }
 
-    private List<Vector2> ShortestPath(Vector2 goalSquare, Vector2 startSquare, Mover currentMover, Tiles[,] testMap)
+    private List<Vector2> ShortestPath(Vector2 goalSquare, Vector2 startSquare, Direction orientation, Mover dummyMover, Tiles[,] testMap, List<Vector2> occupiedList)
     {
         Support.DestroyAllWithTag(Support.MARKER_TAG);
         Dictionary<OrientedSquare, int> distanceDict = new Dictionary<OrientedSquare, int>();
@@ -493,9 +495,9 @@ public class Game : MonoBehaviour
         List<OrientedSquare> visitedSquares = new List<OrientedSquare>();
 
         SimplePriorityQueue<OrientedSquare, float> myQueue = new SimplePriorityQueue<OrientedSquare, float>();
-        OrientedSquare startOrientedSquare = new OrientedSquare(startSquare, currentMover.Orientation);
+        OrientedSquare startOrientedSquare = new OrientedSquare(startSquare, orientation);
         distanceDict[startOrientedSquare] = 0;
-        myQueue.Enqueue(startOrientedSquare, distanceDict[startOrientedSquare] + heuristicDistanceStartToGoal(startOrientedSquare.Position, goalSquare, currentMover));
+        myQueue.Enqueue(startOrientedSquare, distanceDict[startOrientedSquare] + heuristicDistanceStartToGoal(startOrientedSquare.Position, goalSquare, orientation, dummyMover));
         int checkCount = 0;
         bool isSolved = false;
 
@@ -518,14 +520,14 @@ public class Game : MonoBehaviour
                 new OrientedSquare(fromSquare, Support.DirectionRotatedLeftRight(fromDirection, Direction.Left))
             };
             Vector2 forwardSquare = fromSquare + Support.IndexVectorForDirection(fromDirection);
-            if (IsIndexSpaceWalkable(forwardSquare, currentMover.ImpassableTiles, testMap, GetOccupiedIndexPositionsList()) || forwardSquare == goalSquare)
+            if (IsIndexSpaceWalkable(forwardSquare, dummyMover.ImpassableTiles, testMap, occupiedList) || forwardSquare == goalSquare)
             {
                 testSquares.Add(new OrientedSquare(forwardSquare, fromDirection));
             }
 
             foreach (OrientedSquare testSquare in testSquares)
             {
-                int actionPointsDistance = actionPointsCostToOrientedNeighbour(testSquare, fromDirection, currentMover);
+                int actionPointsDistance = actionPointsCostToOrientedNeighbour(testSquare, fromDirection, dummyMover);
                 int newDistance = distanceDict[fromOrientedSquare] + actionPointsDistance;
                 if (distanceDict.ContainsKey(testSquare))
                 {
@@ -540,7 +542,7 @@ public class Game : MonoBehaviour
                 }
                 if (!visitedSquares.Contains(testSquare))
                 {
-                    float heuristicDistance = heuristicDistanceStartToGoal(testSquare.Position, goalSquare, currentMover);
+                    float heuristicDistance = heuristicDistanceStartToGoal(testSquare.Position, goalSquare, orientation, dummyMover);
                     myQueue.Enqueue(testSquare, distanceDict[testSquare] + heuristicDistance);
                     //Below line may cause bugs
                     visitedSquares.Add(testSquare);
@@ -602,18 +604,18 @@ public class Game : MonoBehaviour
         }
     }
 
-    private int actionPointsCostToOrientedNeighbour(OrientedSquare testSquare, Direction fromDirection, Mover currentMover) {
+    private int actionPointsCostToOrientedNeighbour(OrientedSquare testSquare, Direction fromDirection, Mover dummyMover) {
         if (testSquare.Orientation != fromDirection)
         {
-            return currentMover.MovesPerRotation;
+            return dummyMover.MovesPerRotation;
         }
         else
         {
-            return currentMover.MovesPerStep;
+            return dummyMover.MovesPerStep;
         }
     }
 
-    private float heuristicDistanceStartToGoal(Vector2 testSquare, Vector2 goalSquare, Mover currentMover) {
+    private float heuristicDistanceStartToGoal(Vector2 testSquare, Vector2 goalSquare, Direction startOrientation, Mover dummyMover) {
         float xToMove = goalSquare.x - testSquare.x;
         float yToMove = goalSquare.y - testSquare.y;
         int minimumRotations = 0;
@@ -636,7 +638,7 @@ public class Game : MonoBehaviour
         }
         foreach (Direction myDirection in directionList)
         {
-            int tempNumberTurns = Support.MinimumTurns(currentMover.Orientation, myDirection);
+            int tempNumberTurns = Support.MinimumTurns(startOrientation, myDirection);
             if (tempNumberTurns > minimumRotations)
             {
                 minimumRotations = tempNumberTurns;
@@ -646,8 +648,8 @@ public class Game : MonoBehaviour
         {
             throw new System.Exception("Should not be here, minimum rotations is more than 2.");
         }
-        float heuristicDistance = (Mathf.Abs(xToMove) + Mathf.Abs(yToMove)) * currentMover.MovesPerStep +
-                                                                                          minimumRotations * currentMover.MovesPerRotation;
+        float heuristicDistance = (Mathf.Abs(xToMove) + Mathf.Abs(yToMove)) * dummyMover.MovesPerStep +
+                                                                                          minimumRotations * dummyMover.MovesPerRotation;
         return heuristicDistance;
     }
 
