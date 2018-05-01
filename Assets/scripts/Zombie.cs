@@ -6,8 +6,8 @@ public class Zombie : Mover {
 
     const int ZOMBIEMOVESPERTURN = 4;
 
-    public void InitZombie()
+    public void InitZombie(Vector2 location)
     {
-        base.Init(ZOMBIEMOVESPERTURN, Support.PROHIBITED_TILES_NONHUMAN);
+        base.Init(ZOMBIEMOVESPERTURN, Direction.Right, location, Support.PROHIBITED_TILES_NONHUMAN);
     }
 }

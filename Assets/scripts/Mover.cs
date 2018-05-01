@@ -14,6 +14,7 @@ public class Mover : MonoBehaviour {
     int turnMoves = 0;
     int attackMoves = 0;
     List<Tiles> impassableTiles = Support.PROHIBITED_TILES_NONHUMAN;
+    Vector2 indexLocation;
 
 
     #endregion
@@ -32,7 +33,8 @@ public class Mover : MonoBehaviour {
     }
 
     public Vector2 Position {
-        get { return Camera.main.GetComponent<View>().GameObjectCurrentIndexPosition(gameObject); }
+        get { return this.indexLocation; }
+        set { this.indexLocation = value; }
     }
 
     public int MovesPerStep {
@@ -58,11 +60,12 @@ public class Mover : MonoBehaviour {
 
     #region Methods
 
-    protected void Init(int movesPerTurn, List<Tiles> impassableTiles) {
+    protected void Init(int movesPerTurn, Direction orientation, Vector2 indexLocation, List<Tiles> impassableTiles) {
         this.totalMovesPerTurn = movesPerTurn;
         this.remainingMovesPerTurn = totalMovesPerTurn;
-        this.orientation = Direction.Right;
+        this.orientation = orientation;
         this.impassableTiles = impassableTiles;
+        this.indexLocation = indexLocation;
     }
 
     public void ResetMoves() {
@@ -86,6 +89,7 @@ public class Mover : MonoBehaviour {
     public virtual void MoveTo(Vector2 indexPosition) {
         View myView = Camera.main.GetComponent<View>();
         myView.MoveGameObjectToIndex(gameObject,indexPosition);
+        this.indexLocation = indexPosition;
         this.ReduceMovesBy(stepMoves);
     }
 

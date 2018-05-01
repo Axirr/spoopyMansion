@@ -12,8 +12,8 @@ public class Human : Mover
         get { return this.visionShape; }
     }
 
-    public void InitHuman() {
-        base.Init(HUMANMOVESPERTURN, Support.PROHIBITED_TILES_HUMAN);
+    public void InitHuman(Vector2 location) {
+        base.Init(HUMANMOVESPERTURN, Direction.Right, location, Support.PROHIBITED_TILES_HUMAN);
         visionShape = new bool[,] {{true,true,true},
                                     {true,true,true}};
         visionShape = Support.TransposeBoolArray(visionShape);
