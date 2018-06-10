@@ -10,4 +10,19 @@ public class Zombie : Mover {
     {
         base.Init(ZOMBIEMOVESPERTURN, Direction.Right, location, Support.PROHIBITED_TILES_NONHUMAN);
     }
+
+	public override void MoveTo(Vector2 indexPosition)
+	{
+		base.MoveTo(indexPosition);
+		SpriteRenderer spriteRenderer = this.GetComponent<SpriteRenderer>();
+		List<Vector2> currentlyVisibleTiles = Camera.main.GetComponent<Game>().currentlyVisibleTiles();
+		if (currentlyVisibleTiles.Contains(this.Position))
+		{
+			spriteRenderer.enabled = true;
+		}
+		else
+		{
+			spriteRenderer.enabled = false;
+		}
+	}
 }

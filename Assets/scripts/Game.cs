@@ -7,10 +7,10 @@ using System.Linq;
 public class Game : MonoBehaviour
 {
     #region Global Class Variables
-
+    
     // Program mode flags
     bool runUnitTests = false;
-    bool visiblePathing = true;
+    bool visiblePathing = false;
 
     // Information about the current map
     Tiles[,] currentMap;
@@ -256,7 +256,7 @@ public class Game : MonoBehaviour
         List<Vector2> currentVision = VisionForSpaceWithShape(humanMover.Position,
                                                               humanMover.Orientation,
                                                               humanMover.VisionShape);
-        myView.UpdateMap(new List<Vector2>(),currentVision);
+		myView.UpdateMap(currentVision, new List<Vector2>());
     }
 
 
@@ -349,11 +349,11 @@ public class Game : MonoBehaviour
             else if (verticalInput < 0) 
             {
                 didMove = TryMoveForMoverInDirection(mover, Direction.Down);
-            } else if (rotationInput < 0) {
-                mover.Rotate(Direction.Left);
-                didMove = true;
-            } else if (rotationInput > 0) {
-                mover.Rotate(Direction.Right);
+            } else if (rotationInput < 0 || rotationInput > 0) {
+				Direction directionToRotate;
+                if (rotationInput < 0) { directionToRotate = Direction.Left; }
+                else { directionToRotate = Direction.Right; }
+                mover.Rotate(directionToRotate);
                 didMove = true;
             }
 
@@ -363,6 +363,13 @@ public class Game : MonoBehaviour
             }
         }
     }
+
+	public List<Vector2> currentlyVisibleTiles()
+	{
+		Human human = characterTurnOrderList[0].GetComponent<Mover>() as Human;
+		List<Vector2> visibleSquares = VisionForSpaceWithShape(human.Position, human.Orientation, human.VisionShape);
+		return visibleSquares;
+	}
 
     private void MoveToHuman(Mover mover)
     {
@@ -442,7 +449,7 @@ public class Game : MonoBehaviour
         Direction currentMoverOrientation = mover.Orientation;
         if (IsIndexSpaceWalkable(newLocation, mover.ImpassableTiles, currentMap, GetOccupiedIndexPositionsList()) && currentMoverOrientation == direction && mover.RemainingMoves >= Support.MOVES_PER_STEP)
         {
-            mover.MoveTo(newLocation);
+			mover.MoveTo(newLocation);
             return true;
         }
         return false;

@@ -120,61 +120,49 @@ public class View : MonoBehaviour {
         }
     }
 
-    public void UpdateMap(List<Vector2> previousVision, List<Vector2> newVision) {
-        if (!Support.isFogOfWar) {
-            return;
-        }
-        List<Vector2> goneSquares = previousVision.Except(newVision).ToList();
-        List<Vector2> newSquares  = newVision.Except(previousVision).ToList();
-        List<GameObject> zombies = (from charc in Camera.main.GetComponent<Game>().characterTurnOrderList
+	public void UpdateMap(List<Vector2> newlyVisibleTiles, List<Vector2> newlyInvisibleTiles)
+	{
+		List<GameObject> zombies = (from charc in Camera.main.GetComponent<Game>().characterTurnOrderList
                                     where (charc.GetComponent<Mover>() as Human) == null
                                     select charc).ToList();
-        foreach (var square in goneSquares) {
-            UpdateTile(square,false);
-            CheckAndUpdateZombieVisibility(square,zombies,false);
-        }
-        foreach (var square in newSquares) {
-            UpdateTile(square,true);
-            CheckAndUpdateZombieVisibility(square,zombies,true);
-        }
-    }
+		foreach (var tile in newlyVisibleTiles)
+		{
+			UpdateTile(tile, true);
+			CheckAndUpdateZombieVisibility(tile, zombies, true);
+		}
+		foreach (var tile in newlyInvisibleTiles)
+		{
+			UpdateTile(tile, false);
+			CheckAndUpdateZombieVisibility(tile, zombies, false);
+		}
+	}
 
     public void CheckAndUpdateZombieVisibility(Vector2 square, List<GameObject> zombies, bool isVisible) {
-        //float newAlpha = 1.0f;
-        //switch (isVisible) {
-        //    case true:
-        //        newAlpha = 1.0f;
-        //        break;
-        //    case false:
-        //        newAlpha = 0.0f;
-        //        break;
-        //}
         foreach (var zombie in zombies) {
             if (zombie.GetComponent<Mover>().Position == square)
             {
                 zombie.GetComponent<SpriteRenderer>().enabled = isVisible;
-                //Color oldColor = zombie.GetComponent<SpriteRenderer>().color;
-                //oldColor.a = newAlpha;
-                //zombie.GetComponent<SpriteRenderer>().color = oldColor;
             }
         }
     }
 
-    private void ChangeTileSaturation(GameObject newTile, bool increaseSaturation)
+    //Alpha is unsatisfactory method of implementing fog of war, but does not require
+    //knowing what the original color was
+	private void ChangeTileSaturation(GameObject newTile, bool increaseSaturation)
     {
-        SpriteRenderer tileSpriteRenderer = newTile.GetComponent<SpriteRenderer>();
+		SpriteRenderer tileSpriteRenderer = newTile.GetComponent<SpriteRenderer>();
         Color oldColor = tileSpriteRenderer.material.color;
         float newSaturationRatio;
         if (increaseSaturation)
         {
-            newSaturationRatio = 1.0f / desaturationRatio;
+            newSaturationRatio = 1.0f;
         }
         else
         {
             newSaturationRatio = desaturationRatio;
         }
-        Color newColor = oldColor * newSaturationRatio;
-        newColor.a = 1.0f;
+		Color newColor = oldColor;
+		newColor.a = newSaturationRatio;
         tileSpriteRenderer.material.color = newColor;
     }
 
