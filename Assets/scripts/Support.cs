@@ -28,17 +28,49 @@ public class Support : MonoBehaviour
         return tempArray;
     }
 
-    public static bool[,] TransposeBoolArray(bool[,] boolArray) {
-        bool[,] tempArray = new bool[boolArray.GetLength(1), boolArray.GetLength(0)];
-        for (int i = 0; i < boolArray.GetLength(0); i++)
+    public static bool[][] TransposeJaggedArray(bool[][] arr) {
+		int rowCount = arr.Length;
+        int columnCount = arr[0].Length;
+        bool[][] transposed = new bool[columnCount][];
+        if (rowCount == columnCount)
         {
-            for (int j = 0; j < boolArray.GetLength(1); j++)
+            transposed = (bool[][])arr.Clone();
+            for (int i = 1; i < rowCount; i++)
             {
-                tempArray[j, i] = boolArray[boolArray.GetLength(0) - 1 - i, j];
+                for (int j = 0; j < i; j++)
+                {
+                    bool temp = transposed[i][j];
+                    transposed[i][j] = transposed[j][i];
+                    transposed[j][i] = temp;
+                }
             }
         }
-        return tempArray;
+        else
+        {
+            for (int column = 0; column < columnCount; column++)
+            {
+                transposed[column] = new bool[rowCount];
+                for (int row = 0; row < rowCount; row++)
+                {
+                    transposed[column][row] = arr[row][column];
+                }
+            }
+        }
+        return transposed;
     }
+
+	//public static bool[,] TransposeBoolArray(bool[,] boolArray)
+    //{
+    //    bool[,] tempArray = new bool[boolArray.GetLength(1), boolArray.GetLength(0)];
+    //    for (int i = 0; i < boolArray.GetLength(0); i++)
+    //    {
+    //        for (int j = 0; j < boolArray.GetLength(1); j++)
+    //        {
+    //            tempArray[j, i] = boolArray[boolArray.GetLength(0) - 1 - i, j];
+    //        }
+    //    }
+    //    return tempArray;
+    //}
 
     public static void DestroyAllWithTag(string myTag) {
         GameObject[] gameObjectsToDelete = GameObject.FindGameObjectsWithTag(myTag);

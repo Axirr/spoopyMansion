@@ -7,17 +7,24 @@ public class Human : Mover
 {
 
     const int HUMANMOVESPERTURN = 6;
-    bool[,] visionShape;
+    bool[][] visionShape;
 
-    public bool[,] VisionShape {
+    public bool[][] VisionShape {
         get { return this.visionShape; }
     }
-
+    
     public void InitHuman(Vector2 location) {
         base.Init(HUMANMOVESPERTURN, Direction.Right, location, Support.PROHIBITED_TILES_HUMAN);
-        visionShape = new bool[,] {{true,true,true,true,true},
-                                    {true,true,true,true,true}};
-        visionShape = Support.TransposeBoolArray(visionShape);
+		visionShape = new bool[2][];
+		visionShape[0] = new bool[] { true, true, true};
+		visionShape[1] = new bool[] { true, true, true };
+		//visionShape = new bool[3][];
+		//visionShape[0] = new bool[] {false,true,false};
+  //      visionShape[1] = new bool[] {true,true,true};
+		//visionShape[2] = new bool[] { true, true, true };
+
+
+        visionShape = Support.TransposeJaggedArray(visionShape);
     }
 
     public override void MoveTo(Vector2 indexPosition)

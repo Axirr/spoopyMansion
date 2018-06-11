@@ -660,15 +660,16 @@ public class Game : MonoBehaviour
         return heuristicDistance;
     }
 
-    public List<Vector2> VisionForSpaceWithShape(Vector2 location, Direction orientation,bool[,] visionShape) {
+    //Some vision shapes don't work properly, either an issue with this or the jagged transpose function
+    public List<Vector2> VisionForSpaceWithShape(Vector2 location, Direction orientation,bool[][] visionShape) {
         List<Vector2> visibleSquares = new List<Vector2>() { location };
 
 
         int xSignModifier = 1;
         int ySignModifier = 1;
         bool isWidthOffset = true;
-        bool[,] transposedArray = Support.TransposeBoolArray(visionShape);
-        bool[,] arrayToWorkWith = visionShape;
+        bool[][] transposedArray = Support.TransposeJaggedArray(visionShape);
+        bool[][] arrayToWorkWith = visionShape;
         switch (orientation) {
             case Direction.Down:
                 ySignModifier = -1;
@@ -686,7 +687,7 @@ public class Game : MonoBehaviour
                 break;
         }
         int width = arrayToWorkWith.GetLength(0);
-        int height = arrayToWorkWith.GetLength(1);
+        int height = arrayToWorkWith[0].GetLength(0);
         int widthOffset = -width/2;
         int heightOffset = -height/2;
         if (isWidthOffset) {
@@ -698,7 +699,7 @@ public class Game : MonoBehaviour
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 Vector2 testIndex = new Vector2(i*xSignModifier + widthOffset*xSignModifier, j*ySignModifier+heightOffset*ySignModifier) + location;
-                if (IsIndexPositionWithinMap(testIndex) && arrayToWorkWith[i,j] == true) {
+                if (IsIndexPositionWithinMap(testIndex) && arrayToWorkWith[i][j] == true) {
                     visibleSquares.Add(testIndex);
                 }
             }
