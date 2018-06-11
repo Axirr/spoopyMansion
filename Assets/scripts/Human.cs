@@ -15,9 +15,11 @@ public class Human : Mover
     
     public void InitHuman(Vector2 location) {
         base.Init(HUMANMOVESPERTURN, Direction.Right, location, Support.PROHIBITED_TILES_HUMAN);
-		visionShape = new bool[2][];
+		visionShape = new bool[3][];
 		visionShape[0] = new bool[] { true, true, true};
 		visionShape[1] = new bool[] { true, true, true };
+		visionShape[2] = new bool[] { true, true, true };
+
 		//visionShape = new bool[3][];
 		//visionShape[0] = new bool[] {false,true,false};
   //      visionShape[1] = new bool[] {true,true,true};

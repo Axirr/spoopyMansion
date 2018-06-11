@@ -11,6 +11,7 @@ public class Game : MonoBehaviour
     // Program mode flags
     bool runUnitTests = false;
     bool visiblePathing = false;
+	bool shadowsEnabled = true;
 
     // Information about the current map
     Tiles[,] currentMap;
@@ -700,12 +701,107 @@ public class Game : MonoBehaviour
             for (int j = 0; j < height; j++) {
                 Vector2 testIndex = new Vector2(i*xSignModifier + widthOffset*xSignModifier, j*ySignModifier+heightOffset*ySignModifier) + location;
                 if (IsIndexPositionWithinMap(testIndex) && arrayToWorkWith[i][j] == true) {
-                    visibleSquares.Add(testIndex);
+					if (shadowsEnabled) {
+						List<Vector2> tracedList = raytrace((int)location.x, (int)location.y, (int)testIndex.x, (int)testIndex.y);
+						if (tracedList.Count > 0)
+						{
+							visibleSquares.Add(testIndex);
+						}
+					} else
+					{
+						visibleSquares.Add(testIndex);
+					}
                 }
             }
         }
-        return visibleSquares;
+		//List<Vector2> returnList = new List<Vector2>();
+		//if (shadowsEnabled)
+		//{
+		//	foreach (var tile in visibleSquares)
+		//	{
+		//		float tileX = tile.x;
+		//		float tileY = tile.y;
+		//		float slope = tileY - tileX / (location.y - location.x);
+		//		float inverseSlope = -1.0f / slope;
+		//		//Ax + By = C
+		//		float AVLine = -slope;
+		//		float BVLine = 1;
+		//		float CVLine = location.y - slope * location.x;
+		//		float ASLine = -inverseSlope;
+		//		float BSLine = 1;
+		//		float CSLine = tileY - inverseSlope * tileX;
+		//		float delta = AVLine * BSLine - ASLine * BVLine;
+		//		if (Mathf.Abs(delta) > 0.001) {
+		//			float intersectionX = (BSLine*CVLine - BVLine*CSLine)/delta;
+		//			float intersectionY = (AVLine*CSLine - ASLine*CVLine)/delta;
+		//			float distance = Mathf.Sqrt(Mathf.Pow(intersectionX-tileX,2)+Mathf.Pow(intersectionY-tileY,2));
+		//			if (distance > 0.5) {
+		//				returnList.Add(tile);
+		//			}
+		//			print("For tile:");
+		//			print(intersectionX);
+		//			print(intersectionY);
+		//			print(distance);
+		//		} else
+		//		{
+		//			print("Lines are parallel.");
+		//		}
+		//	}
+		//}
+
+		//return visibleSquares;
+		return visibleSquares;
     }
+
+	//BUG: Will go beyond minimum or maximum X indices on long traversals
+	private List<Vector2> raytrace(int x0, int y0, int x1, int y1)
+	{
+		List<Vector2> resultList = new List<Vector2>();
+		int dx = Mathf.Abs(x1 - x0);
+		int dy = Mathf.Abs(y1 - y0);
+		int x = x0;
+		int y = y0;
+		int n = 1 + dx + dy;
+		int x_inc = (x1 > x0) ? 1 : -1;
+		int y_inc = (y1 > y0) ? 1 : -1;
+		int error = dx - dy;
+		dx *= 2;
+		dy *= 2;
+
+		for (; n > 0; --n)
+		{
+			if (n == 1)
+            {
+                resultList.Add(new Vector2(x, y));
+				break;
+            }
+			try
+			{
+				if (currentMap[x, y] == Tiles.Obstacle)
+				{
+					break;
+				}
+			}
+			catch 
+			{
+				resultList.Add(new Vector2(x, y));
+                break;
+			}
+            
+            if (error > 0)
+			{
+				x += x_inc;
+				error -= dy;
+			}
+			else
+			{
+				y += y_inc;
+				error += dy;
+			}
+		}
+
+		return resultList;
+	}
 
     #endregion
 }
