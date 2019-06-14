@@ -11,6 +11,9 @@ public class HUD : MonoBehaviour {
     [SerializeField]
     Text roundsBeatenText = null;
 
+    [SerializeField]
+    Text hasKeyText = null;
+
     public void SetCurrentActionPoints(int points) {
         currentActionPoints.text = "Action Points Left: " + points;
     }
@@ -19,8 +22,20 @@ public class HUD : MonoBehaviour {
         roundsBeatenText.text = string.Format("Rounds Beaten: {0}",roundsBeaten);
     }
 
-	// Use this for initialization
-	void Start () {
+    public void SetHasKey(bool hasKey)
+    {
+        if (!hasKey)
+        {
+            hasKeyText.text = string.Format("No key, can't use door.");
+        }
+        else
+        {
+            hasKeyText.text = string.Format("Have key, find door.");
+        }
+    }
+
+    // Use this for initialization
+    void Start () {
 		
 	}
 	

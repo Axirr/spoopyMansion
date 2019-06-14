@@ -129,13 +129,21 @@ public class View : MonoBehaviour {
 		{
 			UpdateTile(tile, true);
 			CheckAndUpdateZombieVisibility(tile, zombies, true);
-		}
+            if (Support.isKeyEnabled)
+            {
+                CheckAndUpdateKeyVisibility(tile, true);
+            }
+        }
 		foreach (var tile in newlyInvisibleTiles)
 		{
 			UpdateTile(tile, false);
 			CheckAndUpdateZombieVisibility(tile, zombies, false);
-		}
-	}
+            if (Support.isKeyEnabled)
+            {
+                CheckAndUpdateKeyVisibility(tile, false);
+            }
+        }
+    }
 
     public void CheckAndUpdateZombieVisibility(Vector2 square, List<GameObject> zombies, bool isVisible) {
         foreach (var zombie in zombies) {
@@ -146,9 +154,22 @@ public class View : MonoBehaviour {
         }
     }
 
+    public void CheckAndUpdateKeyVisibility(Vector2 square, bool isVisible)
+    {
+        GameObject key = GameObject.FindWithTag(Support.KEY_TAG);
+        if (key != null)
+        {
+            Vector2 keyLocation = key.GetComponent<Item>().Position;
+            if (square.x == keyLocation.x && square.y == keyLocation.y)
+            {
+                key.GetComponent<SpriteRenderer>().enabled = isVisible;
+            }
+        }
+    }
+
     //Alpha is unsatisfactory method of implementing fog of war, but does not require
     //knowing what the original color was
-	private void ChangeTileSaturation(GameObject newTile, bool increaseSaturation)
+    private void ChangeTileSaturation(GameObject newTile, bool increaseSaturation)
     {
 		SpriteRenderer tileSpriteRenderer = newTile.GetComponent<SpriteRenderer>();
         Color oldColor = tileSpriteRenderer.material.color;

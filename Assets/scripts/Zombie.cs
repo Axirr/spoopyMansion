@@ -15,14 +15,17 @@ public class Zombie : Mover {
 	{
 		base.MoveTo(indexPosition);
 		SpriteRenderer spriteRenderer = this.GetComponent<SpriteRenderer>();
-		List<Vector2> currentlyVisibleTiles = Camera.main.GetComponent<Game>().currentlyVisibleTiles();
-		if (currentlyVisibleTiles.Contains(this.Position))
-		{
-			spriteRenderer.enabled = true;
-		}
-		else
-		{
-			spriteRenderer.enabled = false;
-		}
+		if (Support.isFogOfWar)
+        {
+            List<Vector2> currentlyVisibleTiles = Camera.main.GetComponent<Game>().currentlyVisibleTiles();
+            if (currentlyVisibleTiles.Contains(this.Position))
+            {
+                spriteRenderer.enabled = true;
+            }
+            else
+            {
+                spriteRenderer.enabled = false;
+            }
+        }
 	}
 }

@@ -12,11 +12,13 @@ public class Support : MonoBehaviour
     public const string MOVER_TAG = "mover";
     public const string HUD_TAG = "hud";
     public const string MARKER_TAG = "pathMarker";
+    public const string KEY_TAG = "key";
     public const int MOVES_PER_STEP = 2;
     public const int MOVES_PER_Rotation = 1;
     public static List<Tiles> PROHIBITED_TILES_HUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall };
     public static List<Tiles> PROHIBITED_TILES_NONHUMAN = new List<Tiles>() { Tiles.Obstacle, Tiles.Wall, Tiles.Door };
     public static bool isFogOfWar = true;
+    public static bool isKeyEnabled = true;
 
     public static Tiles[,] ReverseMap(Tiles[,] myMap) {
         Tiles[,] tempArray = new Tiles[myMap.GetLength(1), myMap.GetLength(0)];

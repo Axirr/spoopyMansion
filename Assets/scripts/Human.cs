@@ -37,7 +37,10 @@ public class Human : Mover
 		List<Vector2> previousSquares = model.currentlyVisibleTiles();
         base.MoveTo(indexPosition);
 		List<Vector2> newSquares = model.currentlyVisibleTiles();
-		myView.UpdateMap(newSquares.Except(previousSquares).ToList(),previousSquares.Except(newSquares).ToList());
+        if (Support.isFogOfWar)
+        {
+            myView.UpdateMap(newSquares.Except(previousSquares).ToList(), previousSquares.Except(newSquares).ToList());
+        }
     }
 
     public override void Rotate(Direction direction)
@@ -48,6 +51,9 @@ public class Human : Mover
         List<Vector2> previousFullVision = model.currentlyVisibleTiles();
 		base.Rotate(direction);
 		List<Vector2> newFullVision = model.currentlyVisibleTiles();
-		myView.UpdateMap(newFullVision.Except(previousFullVision).ToList(), previousFullVision.Except(newFullVision).ToList());
+        if (Support.isFogOfWar)
+        {
+            myView.UpdateMap(newFullVision.Except(previousFullVision).ToList(), previousFullVision.Except(newFullVision).ToList());
+        }
     }
 }

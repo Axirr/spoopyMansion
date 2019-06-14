@@ -11,7 +11,8 @@ public class Game : MonoBehaviour
     // Program mode flags
     bool runUnitTests = false;
     bool visiblePathing = false;
-	bool shadowsEnabled = true;
+    bool shadowsEnabled = true;
+
 
     // Information about the current map
     Tiles[,] currentMap;
@@ -24,6 +25,7 @@ public class Game : MonoBehaviour
     // Information about the active character and turn order
     GameObject currentCharacter;
     public List<GameObject> characterTurnOrderList = new List<GameObject>();
+    bool hasKey = false;
 
     // Time variables for input delay
     const float MovementInputDelay = 0.2f;
@@ -90,12 +92,28 @@ public class Game : MonoBehaviour
             return;
         }
 
+
+
         // Check if the current player is located on a door tile and load a new map if they are
         Vector2 currentPlayerIndexPosition = myView.GameObjectCurrentIndexPosition(currentCharacter);
         Mover currentMover = currentCharacter.GetComponent<Mover>();
+        //Check for key, if enabled
+        if (Support.isKeyEnabled && !hasKey)
+        {
+            GameObject key = GameObject.FindWithTag(Support.KEY_TAG);
+            Vector2 keyLocation = myView.GameObjectCurrentIndexPosition(key);
+            //MonoBehaviour.print("Key location: " + keyLocation.x + " " + keyLocation.y);
+            //MonoBehaviour.print("Human Location: " + currentPlayerIndexPosition.x + " " + currentPlayerIndexPosition.y);
+            if (currentMover is Human && currentPlayerIndexPosition.x == keyLocation.x && currentPlayerIndexPosition.y == keyLocation.y)
+            {
+                ToggleHasKey(true);
+                Destroy(key);
+            }
+        }
+
         // Standing on door behaviour
         if (currentMover is Human && 
-            currentMap[(int)currentPlayerIndexPosition.x, (int)currentPlayerIndexPosition.y] == Tiles.Door) {
+            currentMap[(int)currentPlayerIndexPosition.x, (int)currentPlayerIndexPosition.y] == Tiles.Door && (hasKey || !Support.isKeyEnabled)) {
             roundsBeaten += 1;
             hud.SetRoundsBeaten(roundsBeaten);
             print(string.Format("The number of rounds beaten is: {0}", roundsBeaten));
@@ -124,6 +142,12 @@ public class Game : MonoBehaviour
         }
     }
 
+    public void ToggleHasKey(bool keyStatus)
+    {
+        hasKey = keyStatus;
+        hud.SetHasKey(keyStatus);
+    }
+
     #endregion
 
 
@@ -133,6 +157,7 @@ public class Game : MonoBehaviour
     // Sets globals corresponding to map properties when a new map is selected
     private void SetMap(Tiles[,] myMap)
     {
+        ToggleHasKey(false);
         currentMap = myMap;
         mapHorizontalWidth = myMap.GetLength(0);
         mapVeticalWidth = myMap.GetLength(1);
@@ -144,6 +169,7 @@ public class Game : MonoBehaviour
         Support.DestroyAllWithTag(Support.MAP_TAG);
         Support.DestroyAllWithTag(Support.MOVER_TAG);
         Support.DestroyAllWithTag(Support.MARKER_TAG);
+        Support.DestroyAllWithTag(Support.KEY_TAG);
         SetMap(mansionMap);
     }
 
@@ -159,6 +185,10 @@ public class Game : MonoBehaviour
             for (int i = 0; i < (zombiesPerRoom + 1); i++)
             {
                 spawnIndexList.Add(ValidRandomIndexFloorPosition(currentMap,spawnIndexList));
+            }
+            if (Support.isKeyEnabled)
+            {
+                spawnIndexList.Add(ValidRandomIndexFloorPosition(currentMap, spawnIndexList));
             }
             if (IsMapValid(currentMap,spawnIndexList)) {
                 wasSuccessful = true;
@@ -242,15 +272,38 @@ public class Game : MonoBehaviour
         characterTurnOrderList.Add(newCharacter);
     }
 
+    public void CreateItem(Vector2 location)
+    {
+        string resourceLoadString;
+        resourceLoadString = @"prefabs\Key";
+        GameObject newItem = Instantiate<GameObject>(Resources.Load(resourceLoadString) as GameObject);
+        Item item = newItem.GetComponent<Item>();
+        item.Init(location);
+        myView.MoveGameObjectToIndex(newItem, location);
+        if (Support.isFogOfWar)
+        {
+            newItem.GetComponent<SpriteRenderer>().enabled = false;
+        }
+    }
+
     public void CreateHumanAndZombies(List<Vector2> spawnLocations) {
         Support.DestroyAllWithTag(Support.MOVER_TAG);
         characterTurnOrderList = new List<GameObject>();
-        for (int i = 0; i < spawnLocations.Count; i++) {
+        // Only goes to second last item, to potentially accomodate key generation
+        for (int i = 0; i < (spawnLocations.Count - 1); i++) {
             if (i == 0) {
                 CreateCharacter(MoverType.Human, spawnLocations[i]);
             } else {
                 CreateCharacter(MoverType.Zombie, spawnLocations[i]);
             }
+        }
+        if (Support.isKeyEnabled)
+        {
+            CreateItem(spawnLocations[spawnLocations.Count - 1]);
+        }
+        else
+        {
+            CreateCharacter(MoverType.Zombie, spawnLocations[spawnLocations.Count - 1]);
         }
         hud.SetCurrentActionPoints(currentCharacter.GetComponent<Mover>().RemainingMoves);
         Human humanMover = currentCharacter.GetComponent<Mover>() as Human;
@@ -756,6 +809,8 @@ public class Game : MonoBehaviour
 	//BUG: Will go beyond minimum or maximum X indices on long traversals
 	private List<Vector2> raytrace(int x0, int y0, int x1, int y1)
 	{
+		print(string.Format("Tracing from ({0},{1}).", x0, y0));
+		print(string.Format("To ({0},{1}).", x1, y1));
 		List<Vector2> resultList = new List<Vector2>();
 		int dx = Mathf.Abs(x1 - x0);
 		int dy = Mathf.Abs(y1 - y0);
@@ -772,7 +827,8 @@ public class Game : MonoBehaviour
 		{
 			if (n == 1)
             {
-                resultList.Add(new Vector2(x, y));
+				print("Added square!");
+				resultList.Add(new Vector2(x, y));
 				break;
             }
 			try
